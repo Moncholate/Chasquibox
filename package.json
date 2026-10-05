@@ -1,0 +1,27 @@
+{
+  "name": "chasquibox",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Chasquibox - la caja de herramientas de clase",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "node tools/check-grupos.mjs && node tools/check-ruleta.mjs && node tools/check-lista-curso.mjs && node tools/check-semaforo.mjs && node tools/check-molde.mjs && node tools/check-muro.mjs && node tools/check-palabras.mjs && node tools/check-crucigrama.mjs && node tools/check-sopa.mjs && node tools/check-notas.mjs"
+  },
+  "dependencies": {
+    "lucide-react": "^0.544.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.43",
+    "@types/react-dom": "^18.2.17",
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.3.6",
+    "vite": "^5.0.8"
+  }
+}

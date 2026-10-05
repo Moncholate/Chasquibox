@@ -1,0 +1,259 @@
+/* ============================================================================
+   LA RULETA DEL WARM-UP
+   ----------------------------------------------------------------------------
+   El profesor escribe verbos («que armen una oración con este») o preguntas de
+   unidades pasadas, y la rueda saca una. No sortea alumnos: sortea CONTENIDO,
+   que es para lo que la usa.
+
+   Eso decide el dibujo. Una pregunta no cabe en un sector, y con veinte
+   tarjetas cada sector mide 18°, así que:
+
+     · dentro de la rueda hay siempre un NÚMERO, y además la palabra cuando de
+       verdad cabe (hasta doce tarjetas, y recortada). Con más, antes la rueda
+       era solo colores girando: sin una sola marca, no parecía una decisión
+       sino una avería, y así lo reportó el profesor. El número cabe siempre y
+       dice en cuál cayó.
+     · el resultado se lee ABAJO, en grande, con su número delante. La rueda es
+       la expectativa; el cartel es la información.
+
+   La geometría y el sorteo están en `../ruleta.js`, con pruebas
+   (`tools/check-ruleta.mjs`): el ángulo es lo que se rompe en silencio.
+   ========================================================================== */
+import React, { useState, useRef, useEffect } from 'react';
+import { parsearLista } from '../lista';
+import { siguienteIndice, deltaHasta, ordenInicial, centroDelSector, queRotular } from '../ruleta';
+import { ACCION, ENLACE } from '../ui';
+
+const TINTES = ['#e0e7ff', '#c7d2fe'];   // indigo-100 / indigo-200: la rueda no compite con el resultado
+const GIRO_MS = 3000;
+
+const reducirMovimiento = () =>
+  typeof window !== 'undefined' && window.matchMedia
+    ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    : false;
+
+/* Un sector como path SVG, con la rueda centrada en (100,100) y radio 96. */
+const sector = (indice, total) => {
+  const paso = 360 / total;
+  const a0 = (indice * paso - 90) * Math.PI / 180;
+  const a1 = ((indice + 1) * paso - 90) * Math.PI / 180;
+  const [x0, y0] = [100 + 96 * Math.cos(a0), 100 + 96 * Math.sin(a0)];
+  const [x1, y1] = [100 + 96 * Math.cos(a1), 100 + 96 * Math.sin(a1)];
+  return `M100,100 L${x0.toFixed(2)},${y0.toFixed(2)} A96,96 0 ${paso > 180 ? 1 : 0},1 ${x1.toFixed(2)},${y1.toFixed(2)} Z`;
+};
+
+/* `grande` = proyectando: la rueda pasa a medirse en alto de pantalla y el
+   cartel del resultado crece con ella. Es el que se lee; la rueda es el gancho. */
+const Ruleta = ({ lang = 'es', grande = false }) => {
+  const es = lang === 'es';
+  const [texto, setTexto] = useState('');
+  const [items, setItems] = useState([]);
+  const [rotacion, setRotacion] = useState(0);
+  const [girando, setGirando] = useState(false);
+  const [usados, setUsados] = useState([]);
+  const [elegido, setElegido] = useState(null);
+  const [sinRepetir, setSinRepetir] = useState(true);
+  const [vueltaNueva, setVueltaNueva] = useState(false);
+  const timer = useRef(null);
+
+  useEffect(() => () => clearTimeout(timer.current), []);
+
+  const usarLista = () => {
+    const lista = parsearLista(texto);
+    if (!lista.length) return;
+    /* Se baraja UNA vez, al cargar: si la rueda se reordenara en cada tirada,
+       el alumno no vería girar nada — vería otra rueda. */
+    setItems(ordenInicial(lista));
+    setUsados([]);
+    setElegido(null);
+    setRotacion(0);
+  };
+
+  const girar = () => {
+    if (girando || !items.length) return;
+    const tirada = siguienteIndice({ total: items.length, usados, sinRepetir });
+    if (!tirada) return;
+    const { indice, reinicia } = tirada;
+    const nuevosUsados = reinicia ? [indice] : [...usados, indice];
+
+    const cerrar = () => {
+      setElegido(indice);
+      setUsados(nuevosUsados);
+      setVueltaNueva(reinicia);
+      setGirando(false);
+    };
+
+    setElegido(null);
+    setRotacion(r => r + deltaHasta({ indice, total: items.length, rotacionActual: r, vueltas: 4 }));
+    if (reducirMovimiento()) { cerrar(); return; }
+    setGirando(true);
+    clearTimeout(timer.current);
+    timer.current = setTimeout(cerrar, GIRO_MS);
+  };
+
+  const quedan = items.length - usados.length;
+  const rotular = queRotular(items.length);
+
+  /* ── CÓMO SE ORIENTA EL TEXTO DENTRO DE UN SECTOR ────────────────────────
+     A LO LARGO DEL RADIO, no cruzándolo. Iba tangencial —perpendicular al
+     radio— y ahí el sector es estrechísimo: el ancho disponible es la cuerda,
+     que con doce tarjetas mide una uña. Por eso había que recortar a catorce
+     caracteres y aun así se veía apretado.
+
+     Un sector es un triángulo isósceles y sus dos lados iguales son los radios.
+     Puesto paralelo a ellos, el texto dispone de TODO el radio —96 unidades en
+     vez de la cuerda— y cabe entero sin encoger nada.
+
+     LA VUELTA ES UN CUARTO, no 45°: tangencial y radial son perpendiculares.
+     El giro exacto depende de dónde caiga el sector, y por eso se calcula.
+
+     Y SE VOLTEA LA MITAD IZQUIERDA. Con el mismo giro para todos, los sectores
+     de la izquierda quedan cabeza abajo. Se les da la vuelta para que todos se
+     lean de izquierda a derecha; es lo que hace cualquier rueda de papel. */
+  const giro = (i) => {
+    const centro = centroDelSector(i, items.length);
+    /* Entre 0 y 180 el sector mira a la derecha y el texto sale bien con un
+       cuarto de vuelta en un sentido; en la otra mitad, en el contrario. */
+    return centro < 180 ? centro - 90 : centro + 90;
+  };
+
+  return (
+    <section className={grande ? 'w-full max-w-3xl mx-auto' : 'w-full max-w-xl mx-auto'}>
+      <h2 className="text-lg font-bold text-slate-900 mb-1">{es ? 'Ruleta' : 'Wheel'}</h2>
+      <p className="text-sm text-muted mb-4">
+        {es ? 'Para el inicio de la clase: pon nombres, temas o preguntas, uno por línea, y gira.'
+            : 'For warm-ups: add the verbs or questions, one per line, and spin.'}
+      </p>
+
+      {!items.length ? (
+        <>
+          <textarea
+            value={texto}
+            onChange={(e) => setTexto(e.target.value)}
+            rows={6}
+            placeholder={es ? 'Un nombre, tema o pregunta por línea' : 'One verb or question per line'}
+            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+          />
+          <button
+            onClick={usarLista}
+            disabled={!parsearLista(texto).length}
+            className={`mt-2 ${ACCION}`}
+          >
+            {es ? 'Usar esta lista' : 'Use this list'}
+          </button>
+        </>
+      ) : (
+        <>
+          <div className="flex flex-col items-center">
+            {/* El puntero, arriba. La rueda gira debajo de él. */}
+            <div className="relative">
+              <div
+                aria-hidden="true"
+                className="absolute left-1/2 -translate-x-1/2 -top-1 w-0 h-0 z-10"
+                style={{ borderLeft: '9px solid transparent', borderRight: '9px solid transparent', borderTop: '16px solid #4338ca' }}
+              />
+              <svg
+                viewBox="0 0 200 200"
+                role="img"
+                aria-label={es ? `Ruleta con ${items.length} tarjetas` : `Wheel with ${items.length} cards`}
+                className={grande ? 'w-[46vh] h-[46vh]' : 'w-56 h-56 sm:w-64 sm:h-64'}
+                style={{
+                  transform: `rotate(${rotacion}deg)`,
+                  transition: girando ? `transform ${GIRO_MS}ms cubic-bezier(.15,.9,.2,1)` : 'none',
+                }}
+              >
+                {items.map((item, i) => (
+                  <path key={i} d={sector(i, items.length)} fill={TINTES[i % 2]} stroke="#fff" strokeWidth="0.8" />
+                ))}
+                {/* UNA SOLA ETIQUETA POR SECTOR: el número y la palabra en el
+                    mismo texto, con el número en un tspan para poder darle más
+                    peso. Separados no se podía: el número iba anclado al borde y
+                    la palabra un poco más adentro, y en la mitad izquierda —donde
+                    el texto crece en sentido contrario— un número de dos cifras
+                    se comía la primera letra («12ravel»). Juntos los coloca el
+                    navegador y no hay nada que cuadrar a mano.
+
+                    Anclada al BORDE y creciendo hacia el centro: es donde el
+                    sector es ancho, así que todas arrancan alineadas y las largas
+                    se meten hacia dentro en vez de salirse de la rueda. */}
+                {rotular.numero && items.map((item, i) => {
+                  const derecha = centroDelSector(i, items.length) < 180;
+                  const palabra = rotular.palabra
+                    ? (item.length > 20 ? item.slice(0, 19) + '…' : item)
+                    : '';
+                  const numero = <tspan style={{ fontWeight: 700 }}>{i + 1}</tspan>;
+                  return (
+                    <text
+                      key={i}
+                      x="100" y="100"
+                      transform={`rotate(${giro(i)} 100 100) translate(${derecha ? 86 : -86} 0)`}
+                      textAnchor={derecha ? 'end' : 'start'}
+                      dominantBaseline="central"
+                      className="fill-slate-700"
+                      style={{ fontSize: '8px', fontWeight: 600 }}
+                    >
+                      {/* En la mitad derecha el borde queda al final de la línea y
+                          en la izquierda al principio, así que el número cambia de
+                          sitio para quedar siempre pegado al borde. */}
+                      {derecha
+                        ? <>{numero}{palabra ? ' ' + palabra : ''}</>
+                        : <>{palabra ? palabra + ' ' : ''}{numero}</>}
+                    </text>
+                  );
+                })}
+                <circle cx="100" cy="100" r="10" fill="#fff" stroke="#c7d2fe" strokeWidth="2" />
+              </svg>
+            </div>
+
+            <button
+              onClick={girar}
+              disabled={girando}
+              className={`mt-3 ${ACCION}`}
+            >
+              {girando ? (es ? 'Girando…' : 'Spinning…') : (es ? 'Girar' : 'Spin')}
+            </button>
+          </div>
+
+          {/* El resultado, que es lo que de verdad se lee. */}
+          <div
+            aria-live="polite"
+            className="mt-3 rounded-2xl border border-slate-200 bg-white px-5 py-6 text-center"
+          >
+            {elegido == null ? (
+              <p className="text-muted text-sm">{es ? 'Toca Girar' : 'Tap Spin'}</p>
+            ) : (
+              <p className={`font-bold text-slate-900 ${grande ? 'text-[5vw] leading-tight' : 'text-2xl sm:text-3xl'}`}>
+                {/* El número delante para poder casar el cartel con el sector en
+                    el que se paró la rueda, que es lo que la clase mira. */}
+                <span className="text-muted tabular-nums mr-2">{elegido + 1}</span>
+                {items[elegido]}
+              </p>
+            )}
+          </div>
+
+          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+            <label className="flex items-center gap-1.5 text-sm text-slate-600 cursor-pointer">
+              <input type="checkbox" checked={sinRepetir} onChange={(e) => { setSinRepetir(e.target.checked); setUsados([]); setVueltaNueva(false); }} />
+              {es ? 'sin repetir' : 'no repeats'}
+            </label>
+            {sinRepetir && (
+              <span className="text-sm text-slate-600">
+                {vueltaNueva
+                  ? (es ? 'salieron todas · vuelta nueva' : 'all came out · new round')
+                  : `${quedan} ${es ? 'por salir' : 'left'}`}
+              </span>
+            )}
+            <button
+              onClick={() => { setItems([]); setElegido(null); setUsados([]); }}
+              className={ENLACE}
+            >
+              {es ? 'cambiar lista' : 'change list'}
+            </button>
+          </div>
+        </>
+      )}
+    </section>
+  );
+};
+
+export default Ruleta;

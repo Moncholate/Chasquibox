@@ -1,0 +1,300 @@
+/* Anillo de foco accesible, generado desde design-tokens (no editar allí). */
+@import './dua.generated.css';
+/* Roles y marca como variables, generados desde design-tokens. */
+@import './colores.generated.css';
+
+@font-face{font-family:'Lexend';font-style:normal;font-weight:400 700;font-display:swap;src:url('./fonts/Lexend.woff2') format('woff2');}
+@font-face{font-family:'Atkinson Hyperlegible';font-style:normal;font-weight:400;font-display:swap;src:url('./fonts/AtkinsonHyperlegible-Regular.woff2') format('woff2');}
+@font-face{font-family:'Atkinson Hyperlegible';font-style:normal;font-weight:700;font-display:swap;src:url('./fonts/AtkinsonHyperlegible-Bold.woff2') format('woff2');}
+
+/* ── Modo oscuro (1ª pasada · override de superficies sobre los neutros del sistema) ── */
+/* EL TEXTO DE PISTA de los campos, en claro. El navegador lo pinta gris-400 y
+   da 2,54:1 sobre blanco — es texto y cuenta. Aquí además carga trabajo: en las
+   herramientas del cierre la pista dice qué se espera que escribas, así que no
+   puede ser lo menos legible de la pantalla. slate-500 da 4,85:1 y sigue
+   leyéndose como pista y no como contenido. */
+:root input::placeholder, :root textarea::placeholder { color: #64748b; opacity: 1; }
+
+/* ── LA HOJA IMPRESA ─────────────────────────────────────────────────────
+   Solo la usa el crucigrama, que es lo único de la suite que se reparte en
+   papel. Se esconde TODO y se deja ver solo `.gh-hoja`, en vez de ir
+   ocultando cabeceras una por una: así, cuando mañana haya otra herramienta
+   imprimible, no hay que acordarse de tapar nada nuevo.
+
+   Y LA HOJA NUNCA LLEVA RESPUESTAS. En pantalla se pueden encender para
+   corregir entre todos; en el papel se apagan aquí, porque un botón que se
+   olvida encendido reparte veinticinco crucigramas resueltos.
+
+   Fondo blanco y tinta negra pase lo que pase: en modo oscuro, imprimir la
+   capa oscura gasta un cartucho y sale gris sobre gris. */
+@media print {
+  body * { visibility: hidden !important; }
+  .gh-hoja, .gh-hoja * { visibility: visible !important; }
+  .gh-hoja {
+    position: absolute !important; left: 0; top: 0; width: 100%;
+    background: #fff !important; color: #000 !important;
+  }
+  .gh-hoja * { background: #fff !important; color: #000 !important; }
+  /* Las letras de la solución se pintan con `color`, así que blanco sobre
+     blanco las borra sin tener que saber qué elemento son. */
+  /* LA SOLUCIÓN NO SE IMPRIME. Se marca en el componente con `gh-solucion` —la
+     letra de cada casilla y la respuesta escrita al lado de la pista— y aquí se
+     esconde por VISIBILIDAD y no por color: las dos se pintan con estilos en
+     línea, y una regla de color que blanquea una acaba ennegreciendo la otra.
+     Ocultar por visibilidad además deja el hueco, así que la casilla mantiene su
+     tamaño y la línea de la pista no se descoloca. */
+  .gh-hoja .gh-solucion { visibility: hidden !important; }
+  /* En la sopa la solución no es tinta sino un FONDO: las casillas de las
+     palabras van resaltadas. Ocultar por visibilidad no vale —se llevaría la
+     letra, que sí tiene que imprimirse— así que se le devuelve el papel. */
+  /* La marca de cada palabra es ahora un TRAZO en un svg debajo de las letras,
+     no un fondo de casilla. En la hoja del alumno no va: se esconde el svg
+     entero, que es lo único que lo dibuja. */
+  .gh-hoja svg { display: none !important; }
+  /* Y lo que el curso encontró resolviéndola proyectada tampoco: la hoja que se
+     reparte sale limpia, se haya resuelto antes en pantalla o no. */
+  .gh-hoja .gh-hallada { text-decoration: none !important; }
+  .gh-no-print { display: none !important; }
+  @page { margin: 12mm; }
+}
+
+/* Modo oscuro (disparado por data-theme; el resolver del <head> lo fija) */
+:root[data-theme="dark"], :root[data-theme="dark"] body { background-color: #0c0e15; color: #eceff8; }
+:root[data-theme="dark"] .bg-white { background-color: #141826 !important; }
+/* LOS CAMPOS DE ESCRITURA. El hub no tuvo ninguno hasta que llegaron las
+   herramientas de clase, así que esta regla —que Grammaster y Desgramatizador
+   tienen desde el principio— faltaba aquí. Sin ella, Tailwind le pasa al campo
+   el `color` heredado (la tinta clara del tema oscuro) y el navegador le deja su
+   fondo blanco: texto casi invisible justo donde el profesor escribe la lista.
+   Lo vio él, no la sonda; la sonda no miraba los campos porque su texto no es un
+   nodo de texto. Ya los mira. */
+:root[data-theme="dark"] input,
+:root[data-theme="dark"] textarea,
+:root[data-theme="dark"] select { background-color: #141826 !important; color: #eceff8 !important; }
+/* #6c7488 daba 3,78:1 sobre #141826 y no pasaba AA (pide 4,5): no lo cazó
+   ningún campo hasta que el temporizador dejó un placeholder de un solo
+   carácter («0») visible en reposo, sin nada escrito encima. Los demás campos
+   de la suite casi siempre llevan texto o se miden con algo ya tecleado, así
+   que el placeholder solo no había quedado nunca a la vista de la sonda.
+   #828aa0 da 5,13:1, muy cerca de lo apagado que ya es el placeholder en modo
+   claro (4,76:1): mismo carácter visual, pasando AA con margen. */
+:root[data-theme="dark"] input::placeholder,
+:root[data-theme="dark"] textarea::placeholder { color: #828aa0 !important; }
+:root[data-theme="dark"] .applogo { background-image: none !important; background-color: #1a1f2e !important; }
+:root[data-theme="dark"] .bg-\[\#f5f6fb\] { background-color: #0c0e15 !important; }
+:root[data-theme="dark"] .bg-gray-50, :root[data-theme="dark"] .bg-slate-50 { background-color: #1a1f2e !important; }
+:root[data-theme="dark"] .bg-gray-100, :root[data-theme="dark"] .bg-slate-100 { background-color: #222839 !important; }
+:root[data-theme="dark"] .bg-gray-200, :root[data-theme="dark"] .bg-slate-200 { background-color: #2a3042 !important; }
+:root[data-theme="dark"] .text-gray-900, :root[data-theme="dark"] .text-gray-800, :root[data-theme="dark"] .text-slate-900, :root[data-theme="dark"] .text-slate-800, :root[data-theme="dark"] .text-black { color: #eceff8 !important; }
+:root[data-theme="dark"] .text-gray-700, :root[data-theme="dark"] .text-gray-600, :root[data-theme="dark"] .text-slate-700, :root[data-theme="dark"] .text-slate-600 { color: #c7cdda !important; }
+:root[data-theme="dark"] .text-gray-500, :root[data-theme="dark"] .text-gray-400, :root[data-theme="dark"] .text-slate-500, :root[data-theme="dark"] .text-slate-400 { color: #9aa2b6 !important; }
+:root[data-theme="dark"] .border-gray-100, :root[data-theme="dark"] .border-gray-200, :root[data-theme="dark"] .border-slate-100, :root[data-theme="dark"] .border-slate-200, :root[data-theme="dark"] .border-slate-300 { border-color: #2a3042 !important; }
+/* Cajas del selector de nivel por etapas (tinte índigo progresivo) */
+:root[data-theme="dark"] .bg-indigo-50\/50 { background-color: #191e33 !important; }
+:root[data-theme="dark"] .bg-indigo-50 { background-color: #1e2440 !important; }
+:root[data-theme="dark"] .bg-indigo-100\/70 { background-color: #252c4e !important; }
+:root[data-theme="dark"] .border-indigo-100 { border-color: #2a3152 !important; }
+:root[data-theme="dark"] .border-indigo-200 { border-color: #333b61 !important; }
+:root[data-theme="dark"] .border-indigo-300 { border-color: #404a77 !important; }
+/* EL AVISO DE «no pude leer el histórico», en Grupos. Es el PRIMER rosa con
+   texto del hub, así que no había ni fondo ni tinta: el tinte se quedaba en
+   #fff1f2 y la tinta en #be123c en pleno modo oscuro — un cartel de papel
+   pegado sobre la pantalla negra. Van los tres juntos, como el ámbar de aquí
+   abajo: sin el fondo, la tinta clara cae sobre el rosa claro y es peor.
+   Los valores son los que Grammaster ya usa para su rosa, para que el mismo
+   aviso no se vea de dos maneras según la app. */
+/* Las notas: aprobada en azul y reprobada en rojo, como se anotan a mano.
+   Los -700 sobre el fondo oscuro quedan bajo 3:1; los -400 pasan de 6:1. */
+:root[data-theme="dark"] .text-blue-700 { color: #60a5fa !important; }
+:root[data-theme="dark"] .text-red-700 { color: #f87171 !important; }
+:root[data-theme="dark"] .bg-rose-50 { background-color: #331520 !important; }
+:root[data-theme="dark"] .border-rose-200 { border-color: #572635 !important; }
+:root[data-theme="dark"] .bg-rose-50.text-rose-700,
+:root[data-theme="dark"] .bg-rose-50 .text-rose-700 { color: #fda4af !important; }  /* 1.91 → 7.90:1 sobre #331520 */
+/* Aviso de la frase del día (ítem en debate o sin fuente primaria) */
+:root[data-theme="dark"] .bg-amber-50 { background-color: #2e2410 !important; }
+:root[data-theme="dark"] .border-amber-200 { border-color: #4a3a15 !important; }
+:root[data-theme="dark"] .text-amber-900 { color: #f0d9a8 !important; }
+
+/* Superficie del aviso de la frase del día.
+   Va aparte de .bg-white porque el panel necesita separarse del fondo velado y
+   eso se resuelve distinto en cada tema (medido con el velo a 65%):
+   · claro  → blanco sobre el velo da 5,8:1; el borde solo remata.
+   · oscuro → por luminancia el máximo posible es 1,5:1, o sea invisible. La
+              separación tiene que venir del borde, y la superficie se sube un
+              punto (#1b2133) para que se lea como panel elevado. */
+.gh-dialog  { background: #ffffff; border: 1px solid #e2e8f0; }
+.gh-grabber { background: #e2e8f0; }
+/* #525d85 y no el #2a3042 de los bordes normales: contra el velo da 2,85:1 y
+   contra el panel 2,49:1, o sea un canto que de verdad se ve. Con el borde
+   habitual quedaba en 1,6:1 — invisible, que es el problema que se arregla. */
+:root[data-theme="dark"] .gh-dialog  { background: #1b2133; border-color: #525d85; }
+:root[data-theme="dark"] .gh-grabber { background: #525d85; }
+
+/* Aviso de la frase del día: hoja desde abajo en celular, aparición suave en PC */
+@keyframes ghFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ghSheet { from { transform: translateY(24px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.gh-fade  { animation: ghFade .18s ease-out; }
+.gh-sheet { animation: ghSheet .26s cubic-bezier(.22,1,.36,1); }
+@media (prefers-reduced-motion: reduce) {
+  .gh-fade, .gh-sheet { animation: none; }
+}
+
+/* La figura chica de la analogía, al destaparse. Aterriza desde arriba y rebota
+   un poco: es un dinosaurio de ocho bloques cayendo en un hueco del porte de un
+   T-Rex, y ese vacío alrededor es el chiste. Corta, porque el remate es lo que
+   se ve, no la animación. */
+@keyframes ghDinoPop {
+  0%   { transform: translateY(-14px) scale(.86); opacity: 0; }
+  70%  { transform: translateY(0) scale(1.06); opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+.dino-pop { animation: ghDinoPop .42s cubic-bezier(.2,.9,.25,1.3); transform-origin: bottom center; }
+@media (prefers-reduced-motion: reduce) {
+  .dino-pop { animation: none; }
+}
+
+/* Pulso del selector de nivel al tocar una app sin nivel elegido */
+@keyframes ghNudge {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(244,63,94,0); }
+  25%      { transform: scale(1.015); box-shadow: 0 0 0 4px rgba(244,63,94,.28); }
+  60%      { transform: scale(1); box-shadow: 0 0 0 4px rgba(244,63,94,.16); }
+}
+.gh-nudge { animation: ghNudge .9s ease 2; }
+@media (prefers-reduced-motion: reduce) {
+  .gh-nudge { animation: none; box-shadow: 0 0 0 3px rgba(244,63,94,.35); }
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  font-family: 'Lexend', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+body {
+  background-color: #f3f4f6;
+  color: #1f2937;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #e5e7eb;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #9ca3af;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+/* El anillo de foco lo pone ahora dua.generated.css, con el color de los tokens.
+   El que había aquí era un #1e40af fijo: azul oscuro, casi invisible sobre el
+   fondo #0c0e15 del tema oscuro. */
+
+/* ── Afordancia de clic en escritorio ──────────────────────────────────────
+   Tailwind no le pone `cursor:pointer` a los <button>, así que el navegador les
+   deja la flecha y no se ven clicables al pasar el mouse. Question Lab sí lo
+   hacía (`.tabbtn { cursor:pointer }`) y por eso era la única que se sentía
+   bien en PC. Va en una regla base para que valga para todo botón, presente y
+   futuro, en vez de tener que acordarse de la clase en cada uno. */
+button:not(:disabled),
+[role="button"],
+summary,
+label[for] { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+
+/* Las variantes `hover:` NO estaban en la capa oscura, y ahí el hover hacía lo
+   contrario de lo que debe: aclaraba el fondo y oscurecía el texto. */
+:root[data-theme="dark"] .hover\:bg-gray-50:hover,
+:root[data-theme="dark"] .hover\:bg-slate-50:hover { background-color: #1d2233 !important; }
+:root[data-theme="dark"] .hover\:bg-gray-100:hover,
+:root[data-theme="dark"] .hover\:bg-gray-200:hover { background-color: #2a3042 !important; }
+:root[data-theme="dark"] .hover\:text-gray-600:hover,
+:root[data-theme="dark"] .hover\:text-gray-800:hover,
+:root[data-theme="dark"] .hover\:text-slate-700:hover { color: #eceff8 !important; }
+
+/* Aquí vivían los tintes de COLOR en hover (indigo/blue/teal/amber/red/rose -50)
+   copiados de las apps: el hub no tiene ninguno. Lo suyo son los neutros de
+   abajo. Si algún día una tarjeta estrena un hover de color, la regla vuelve —
+   con el tinte de color apagado a superficie, como en las gemelas. */
+:root[data-theme="dark"] .hover\:bg-slate-100:hover,
+:root[data-theme="dark"] .hover\:bg-slate-200:hover,
+:root[data-theme="dark"] .hover\:bg-indigo-100:hover,
+:root[data-theme="dark"] .hover\:bg-indigo-200:hover,
+:root[data-theme="dark"] .hover\:bg-amber-100:hover,
+:root[data-theme="dark"] .hover\:bg-amber-200:hover,
+:root[data-theme="dark"] .hover\:bg-red-100:hover { background-color: #2a3042 !important; }
+:root[data-theme="dark"] .hover\:text-gray-700:hover,
+:root[data-theme="dark"] .hover\:text-slate-600:hover,
+:root[data-theme="dark"] .hover\:text-slate-800:hover,
+/* -900 lo estrenaron las pestañas de las herramientas de clase. La rampa se
+   cubre entera para que la siguiente parada no vuelva a quedarse fuera. */
+:root[data-theme="dark"] .hover\:text-slate-900:hover { color: #eceff8 !important; }
+
+/* Tinta de color sobre un tinte que la capa oscurece: el fondo se invierte y el
+   texto de marca no, así que queda tinta oscura sobre fondo oscuro (2.61:1).
+   Selector compuesto/descendiente a propósito: no toca los chips -100, que
+   conservan su fondo claro. Lo detecta `check-dark.mjs`. */
+:root[data-theme="dark"] .bg-slate-50.text-indigo-600,
+:root[data-theme="dark"] .bg-slate-50 .text-indigo-600 { color: #c7d2fe !important; }  /* 11.00:1 */
+
+/* LOS BOTONES DE LAS HERRAMIENTAS DE CLASE. La opción encendida va en tinte
+   índigo con tinta `indigo-700`, y la pestaña activa en blanco con la misma
+   tinta: el índigo sólido se reservó para LA acción, así que estas dos tenían
+   que distinguirse sin robárselo. En oscuro esa tinta cae a 1,92:1 sobre el
+   tinte y a 2,24:1 sobre la tarjeta — lo cazó la sonda antes de publicar.
+   `--marca` en su valor oscuro da 4,90 y 5,70. Se usa la variable y no un hex
+   copiado: es lo que vigila `check-roles-css`. */
+:root[data-theme="dark"] .bg-indigo-50.text-indigo-700,
+:root[data-theme="dark"] .bg-indigo-50 .text-indigo-700,
+:root[data-theme="dark"] .bg-white.text-indigo-700,
+:root[data-theme="dark"] .bg-white .text-indigo-700 { color: var(--marca) !important; }
+
+/* Tinta de marca que la capa no invertía y quedaba oscura sobre fondo oscuro.
+   Compuestos a propósito: los chips sobre tinte claro conservan su texto.
+   Y también DESCENDIENTE: el rótulo de cada grupo del reparto («Grupo 1 · 4»)
+   va dentro de una tarjeta `bg-white`, no sobre ella, así que el compuesto no
+   lo alcanzaba y se quedaba en 2,81:1. En oscuro la tarjeta blanca es #141826:
+   cualquier índigo oscuro ahí dentro es ilegible, así que la regla no puede
+   romper nada que hoy funcione. */
+:root[data-theme="dark"] .bg-white.text-indigo-600,
+:root[data-theme="dark"] .bg-white .text-indigo-600 { color: #c7d2fe !important; }   /* 2.81 → 11.85 */
+/* El selector de nivel: en reposo ya estaba cubierto arriba, pero al pasar el
+   ratón vuelve a indigo-600 por la variante `hover:`, que es OTRA clase y el
+   override de arriba no alcanza. Quedaba en 2,81:1 justo al apuntarlo. */
+:root[data-theme="dark"] .hover\:text-indigo-600:hover { color: var(--marca) !important; }  /* 5.70:1 sobre #141826 · marca, no rol */
+
+/* El hover oscurece el fondo ámbar a un neutro, pero la tinta seguía siendo
+   amber-800: 1,85:1 solo mientras el ratón está encima. Compuesto para tocar
+   únicamente ese elemento en ese estado. */
+:root[data-theme="dark"] .hover\:bg-amber-200:hover.text-amber-800 { color: #fde68a !important; }
+
+/* ── Etiquetas del selector de nivel ─────────────────────────────────────────
+   La rampa 600→700→800 refuerza la del tinte de la caja (Básico → Intermedio,
+   cada vez más intenso). En CLARO da 5,68 / 7,07 / 8,31, pero en oscuro esas
+   mismas paradas caen a 2,16 / 1,92 / 1,36 sobre la caja ya oscurecida: el
+   requisito se invierte con el tema, como pasa con `accent.ink` en los tokens.
+   Aquí la rampa se aplana a un solo indigo-400 y no se invierte parada por
+   parada, porque en oscuro la caja SÍ conserva su ramp de intensidad y basta
+   con que la etiqueta se lea sobre las tres (4,55 / 5,10 / 4,55).
+   No usan `--marca`: se probó y se queda en 4,37 sobre dos de las tres cajas. */
+:root[data-theme="dark"] legend.text-indigo-600,
+:root[data-theme="dark"] legend.text-indigo-700,
+:root[data-theme="dark"] legend.text-indigo-800 { color: #818cf8 !important; }
