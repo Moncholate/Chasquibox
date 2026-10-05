@@ -21,7 +21,7 @@
    ningún repositorio. Los de aquí están inventados.
 
    Correr:  node tools/check-lista-curso.mjs        (desde Grammar HUB/) */
-import { leerHistorico, pareceHistorico, ERRORES } from '../src/listaCurso.js';
+import { leerHistorico, pareceHistorico, ERRORES, fechaDeHoy, cargaDesdeHistorico } from '../src/listaCurso.js';
 
 let problemas = 0;
 const fallo = (m) => { console.log('   ✗ ' + m); problemas++; };
@@ -210,6 +210,30 @@ console.log('\nuna clase sin lista en medio no corre las columnas');
   igual(r.presentes.map(a => a.nombre), ['Carla', 'Dario', 'Felipe', 'Gabriela'], 'los presentes son los de ese día');
   igual(r.fechasTomadas.length, TOMADAS - 1, 'la clase sin lista no se ofrece como fecha');
   igual(leerHistorico(conHueco, { fecha: CLASES[2] }).error, ERRORES.fechaSinLista, 'pedir la clase sin lista lo dice');
+}
+
+console.log('\nde qué día es la lista, y cambiar de día sin volver a pegar');
+{
+  /* La fecha de hoy en el formato del archivo: sin esto no se puede avisar
+     «esta lista no es de hoy», que es el error que pasó en clase. */
+  igual(fechaDeHoy(new Date(2026, 9, 5)), '05-10-26', 'hoy sale como el archivo: 05-10-26');
+  igual(fechaDeHoy(new Date(2026, 11, 31)), '31-12-26', 'y el último día del año también');
+
+  const c = cargaDesdeHistorico(PEGADO);
+  igual(c.origen.fecha, '31-08-26', 'la carga cae en la última clase con lista');
+  igual(c.origen.ultimaTomada, '31-08-26', 'y sabe que esa es la última');
+  igual(c.nombres.length, FILAS.length, 'trae a todo el curso');
+  igual([...c.ausentes].length, c.origen.ausentes, 'los ausentes y su número cuadran');
+  if (c.origen.texto === PEGADO) ok('guarda lo pegado en memoria para releerlo con otra fecha');
+  else fallo('no guardó lo pegado: cambiar de día obligaría a pegar de nuevo');
+
+  /* Otro día: el 28-08 (clase 9) Carla faltó y Elena vino. */
+  const otro = cargaDesdeHistorico(c.origen.texto, { fecha: '28-08-26' });
+  igual(otro.origen.fecha, '28-08-26', 'releer con otra fecha da esa clase');
+  igual(otro.origen.ultimaTomada, '31-08-26', 'sin olvidar cuál es la última, para avisar que es una anterior');
+  if (otro.ausentes.has('Carla Ramirez') && !otro.ausentes.has('Elena Nunez')) ok('los ausentes son los de ese día, no los del último');
+  else fallo(`ausentes del 28-08: ${JSON.stringify([...otro.ausentes])}`);
+  igual(cargaDesdeHistorico(PEGADO, { fecha: '01-01-26' }).error, ERRORES.fechaSinClase, 'un día sin clase devuelve el error, no una lista');
 }
 
 console.log('\nse distingue un histórico de la lista de siempre');

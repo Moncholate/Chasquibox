@@ -19,6 +19,7 @@
 import React, { useState } from 'react';
 import { repartir } from '../grupos';
 import CargarCurso from './CargarCurso';
+import OrigenLista from './OrigenLista';
 import { ACCION, opcion, ENLACE, NUMERO } from '../ui';
 
 /* `grande` = proyectando: lo que se mira son los grupos, así que las tarjetas se
@@ -33,7 +34,7 @@ import { ACCION, opcion, ENLACE, NUMERO } from '../ui';
 const Grupos = ({
   lang = 'es', grande = false,
   nombres = [], ausentes = new Set(), origen = null,
-  onCargar, onAlternar, onCambiarLista,
+  onCargar, onAlternar, onCambiarLista, onCambiarFecha,
 }) => {
   const es = lang === 'es';
   const [modo, setModo] = useState('porGrupo');
@@ -56,6 +57,14 @@ const Grupos = ({
         <CargarCurso lang={lang} onCargar={(c) => { setGrupos(null); onCargar?.(c); }} />
       ) : (
         <>
+          {/* DE QUÉ DÍA ES ESTA LISTA. Va arriba de todo y no escondida: el histórico
+              cae a la última clase con lista pasada, que si hoy aún no la pasas
+              es la clase ANTERIOR. Una lista que usa en silencio las ausencias
+              del viernes es peor que no tener lista. */}
+          <OrigenLista lang={lang} origen={origen}
+                       fuera={es ? 'apagados' : 'switched off'}
+                       onCambiarFecha={(f) => { setGrupos(null); onCambiarFecha?.(f); }} />
+
           {/* — */}
           {/* Las fichas. Apagar a alguien no lo borra: `aria-pressed` dice el
               estado en voz alta, y el tachado lo dice a la vista. */}
@@ -82,18 +91,6 @@ const Grupos = ({
               );
             })}
           </div>
-
-          {/* DE QUÉ DÍA ES ESTA LISTA. Va arriba y no escondida: el histórico
-              cae a la última clase con lista pasada, que si hoy aún no la pasas
-              es la clase ANTERIOR. Una lista que usa en silencio las ausencias
-              del viernes es peor que no tener lista. */}
-          {origen && (
-            <p className="mb-3 text-xs text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg px-2.5 py-2">
-              {es
-                ? `${origen.curso || 'Curso'} · clase ${origen.clase} del ${origen.fecha}: ${origen.ausentes} apagados por inasistencia. Si hoy aún no pasas lista, esta es la clase anterior.`
-                : `${origen.curso || 'Course'} · class ${origen.clase} on ${origen.fecha}: ${origen.ausentes} switched off for absence. If today’s roll is not taken yet, this is the previous class.`}
-            </p>
-          )}
 
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mb-3">
             <span className="text-sm text-slate-600">

@@ -28,7 +28,7 @@
    ========================================================================== */
 import React, { useState } from 'react';
 import { parsearNombres } from '../grupos';
-import { leerHistorico, pareceHistorico, ERRORES } from '../listaCurso';
+import { cargaDesdeHistorico, pareceHistorico, ERRORES } from '../listaCurso';
 import { ACCION } from '../ui';
 
 /**
@@ -58,19 +58,15 @@ const CargarCurso = ({ lang = 'es', onCargar, compacto = false }) => {
 
   const cargar = () => {
     if (pareceHistorico(texto)) {
-      const h = leerHistorico(texto);
-      if (h.error) {
-        setAviso(PORQUE[h.error] || (es
+      const c = cargaDesdeHistorico(texto);
+      if (c.error) {
+        setAviso(PORQUE[c.error] || (es
           ? 'Eso no parece el histórico de asistencia. Pega también la cabecera, o escribe los nombres uno por línea.'
           : 'That does not look like the attendance export. Paste the header too, or type one name per line.'));
         return;
       }
       setAviso(null);
-      onCargar?.({
-        nombres: h.alumnos.map(a => a.corto),
-        ausentes: new Set(h.ausentes.map(a => a.corto)),
-        origen: { curso: h.curso, fecha: h.fecha, clase: h.clase, ausentes: h.ausentes.length },
-      });
+      onCargar?.(c);
       return;
     }
     setAviso(null);

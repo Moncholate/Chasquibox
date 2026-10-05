@@ -191,3 +191,37 @@ export const pareceHistorico = (texto) => {
   if (!t.includes('\t')) return false;
   return /apellido\s+paterno/i.test(t.normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
 };
+
+/** Hoy, en el formato del archivo (`05-10-26`), para poder decir si la lista
+    cargada es la de hoy. `ahora` se inyecta para poder probarlo. */
+export const fechaDeHoy = (ahora = new Date()) => {
+  const dos = (n) => String(n).padStart(2, '0');
+  return `${dos(ahora.getDate())}-${dos(ahora.getMonth() + 1)}-${dos(ahora.getFullYear() % 100)}`;
+};
+
+/**
+ * Del histórico pegado a lo que usan las herramientas: los nombres, los
+ * ausentes y de qué clase es la lista. Lo usan la carga y el cambio de día, y
+ * por eso vive aquí: dos armados de lo mismo terminan diciendo cosas distintas.
+ *
+ * `origen.texto` es lo pegado, tal cual. Se queda en memoria —como todo, vive
+ * mientras la pestaña esté abierta— para poder releerlo con otra fecha sin
+ * pedirle al profesor que pegue de nuevo.
+ */
+export const cargaDesdeHistorico = (texto, { fecha = null } = {}) => {
+  const h = leerHistorico(texto, { fecha });
+  if (h.error) return h;
+  return {
+    nombres: h.alumnos.map(a => a.corto),
+    ausentes: new Set(h.ausentes.map(a => a.corto)),
+    origen: {
+      curso: h.curso,
+      fecha: h.fecha,
+      clase: h.clase,
+      ausentes: h.ausentes.length,
+      ultimaTomada: h.ultimaTomada,
+      fechasTomadas: h.fechasTomadas,
+      texto,
+    },
+  };
+};

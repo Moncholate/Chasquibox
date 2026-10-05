@@ -35,6 +35,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { barajar } from '../lista';
 import { formatoReloj, estadoReloj } from '../temporizador';
 import CargarCurso from './CargarCurso';
+import OrigenLista from './OrigenLista';
 import { ACCION, APAGADO, opcion, ENLACE } from '../ui';
 
 /* Dos minutos. Es más que «La duda» porque aquí se escriben dos frases y una
@@ -42,7 +43,7 @@ import { ACCION, APAGADO, opcion, ENLACE } from '../ui';
 const SEGUNDOS = [90, 120, 180];
 const CUANTOS = 3;
 
-const AntesAhora = ({ lang = 'es', curso = [], origen = null, onCargar, onCambiarLista, grande = false }) => {
+const AntesAhora = ({ lang = 'es', curso = [], origen = null, onCargar, onCambiarLista, onCambiarFecha, grande = false }) => {
   const es = lang === 'es';
 
   const [fase, setFase] = useState('preparar');
@@ -117,19 +118,15 @@ const AntesAhora = ({ lang = 'es', curso = [], origen = null, onCargar, onCambia
     <details className="rounded-xl border border-slate-200 bg-white px-4 py-3">
       <summary className="text-sm font-semibold text-slate-700 cursor-pointer">
         {curso.length
-          ? (es ? `Lista del curso · ${curso.length} presentes` : `Class list · ${curso.length} present`)
+          ? (es ? `Lista del curso${origen ? ` del ${origen.fecha}` : ''} · ${curso.length} presentes` : `Class list${origen ? ` from ${origen.fecha}` : ''} · ${curso.length} present`)
           : (es ? 'Cargar la lista del curso, para sortear a quién le toca' : 'Load the class list, to draw whose turn it is')}
       </summary>
       <div className="mt-3">
         {curso.length ? (
           <>
-            {origen && (
-              <p className="mb-3 text-xs text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg px-2.5 py-2">
-                {es
-                  ? `${origen.curso || 'Curso'} · clase ${origen.clase} del ${origen.fecha}: ${origen.ausentes} no vinieron y no entran en el sorteo.`
-                  : `${origen.curso || 'Course'} · class ${origen.clase} on ${origen.fecha}: ${origen.ausentes} were absent and are out of the draw.`}
-              </p>
-            )}
+            <OrigenLista lang={lang} origen={origen}
+                         fuera={es ? 'no entran en el sorteo' : 'out of the draw'}
+                         onCambiarFecha={onCambiarFecha} />
             <p className="text-xs text-muted mb-2">{curso.join(' · ')}</p>
             <button onClick={() => onCambiarLista?.()} className={ENLACE}>
               {es ? 'cambiar lista' : 'change list'}

@@ -48,6 +48,7 @@ import AntesAhora from './AntesAhora';
 import Muro from './Muro';
 import Notas from './Notas';
 import { CAPSULA, pestana } from '../ui';
+import { cargaDesdeHistorico } from '../listaCurso';
 
 const PanelDocente = ({ lang = 'es' }) => {
   const es = lang === 'es';
@@ -83,6 +84,13 @@ const PanelDocente = ({ lang = 'es' }) => {
     return s;
   });
   const cambiarLista = () => { setNombres([]); setAusentes(new Set()); setOrigen(null); };
+  /* Otro día del mismo histórico: se relee lo pegado con esa fecha. Lo que el
+     profesor apagó a mano se pierde, a propósito: era sobre la otra clase. */
+  const cambiarFecha = (fecha) => {
+    if (!origen?.texto) return;
+    const c = cargaDesdeHistorico(origen.texto, { fecha });
+    if (!c.error) cargarCurso(c);
+  };
   const [presentando, setPresentando] = useState(false);
   const caja = useRef(null);
 
@@ -210,7 +218,7 @@ const PanelDocente = ({ lang = 'es' }) => {
         <div className={vista === 'ruleta' ? '' : 'hidden'}><Ruleta lang={lang} grande={presentando} /></div>
         <div className={vista === 'grupos' ? '' : 'hidden'}><Grupos lang={lang} grande={presentando}
                     nombres={nombres} ausentes={ausentes} origen={origen}
-                    onCargar={cargarCurso} onAlternar={alternarAusente} onCambiarLista={cambiarLista} /></div>
+                    onCargar={cargarCurso} onAlternar={alternarAusente} onCambiarLista={cambiarLista} onCambiarFecha={cambiarFecha} /></div>
         <div className={vista === 'tiempo' ? '' : 'hidden'}><Temporizador lang={lang} grande={presentando} /></div>
         <div className={vista === 'sopa' ? '' : 'hidden'}><Sopa lang={lang} grande={presentando} /></div>
         <div className={vista === 'crucigrama' ? '' : 'hidden'}><Crucigrama lang={lang} grande={presentando} /></div>
@@ -218,9 +226,9 @@ const PanelDocente = ({ lang = 'es' }) => {
         <div className={vista === 'semaforo' ? '' : 'hidden'}><Semaforo lang={lang} grande={presentando} /></div>
         <div className={vista === 'apuesta' ? '' : 'hidden'}><Apuesta lang={lang} grande={presentando} /></div>
         <div className={vista === 'duda' ? '' : 'hidden'}><Duda lang={lang} grande={presentando}
-                    curso={presentes} origen={origen} onCargar={cargarCurso} onCambiarLista={cambiarLista} /></div>
+                    curso={presentes} origen={origen} onCargar={cargarCurso} onCambiarLista={cambiarLista} onCambiarFecha={cambiarFecha} /></div>
         <div className={vista === 'antes' ? '' : 'hidden'}><AntesAhora lang={lang} grande={presentando}
-                    curso={presentes} origen={origen} onCargar={cargarCurso} onCambiarLista={cambiarLista} /></div>
+                    curso={presentes} origen={origen} onCargar={cargarCurso} onCambiarLista={cambiarLista} onCambiarFecha={cambiarFecha} /></div>
         <div className={vista === 'notas' ? '' : 'hidden'}><Notas lang={lang} grande={presentando} /></div>
 
       </div>
