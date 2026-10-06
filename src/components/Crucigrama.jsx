@@ -64,7 +64,8 @@
    ========================================================================== */
 import React, { useState } from 'react';
 import { parsearPalabras, generar, pistas, MAX_PALABRAS } from '../crucigrama';
-import { ACCION, APAGADO, ENLACE } from '../ui';
+import { APAGADO, ENLACE } from '../ui';
+import { Panel, Escenario, Accion, Cabeza } from '../zonas';
 
 /* LA CUADRÍCULA ES PAPEL, y va fija en los dos temas — igual que la carcasa del
    semáforo es un objeto oscuro en los dos. Un crucigrama es una hoja: blanco con
@@ -77,7 +78,7 @@ const TRAZO = '#334155';   /* el borde de la casilla */
 const NUMERO = '#475569';  /* 7,4:1 sobre el papel, y es el texto más chico */
 const TINTA = '#4338ca';   /* la letra de la solución: 8,1:1 sobre el papel */
 
-const Crucigrama = ({ lang = 'es', grande = false }) => {
+const Crucigrama = ({ lang = 'es' }) => {
   const es = lang === 'es';
   const [texto, setTexto] = useState('');
   const [cruci, setCruci] = useState(null);
@@ -108,16 +109,18 @@ const Crucigrama = ({ lang = 'es', grande = false }) => {
     setReveladas(new Set());
   };
 
-  /* EL LADO DE LA CASILLA, en unidades del VIEWPORT y nunca en porcentaje. Un
-     % en el ancho se mide contra el ancho del contenedor y en el alto contra su
-     alto, así que la misma cadena servía para `width` y no para `height`: las
-     casillas salían aplastadas. `vw` mide lo mismo en los dos.
+  /* EL LADO DE LA CASILLA, en unidades del ESCENARIO (cqw/cqh) y nunca en
+     porcentaje. Un % en el ancho se mide contra el ancho del contenedor y en el
+     alto contra su alto, así que la misma cadena servía para `width` y no para
+     `height`: las casillas salían aplastadas. cqw/cqh miden lo mismo en los dos.
+     En PC la cuadrícula comparte el ancho con las pistas (van al lado), así que
+     se reparte poco más de la mitad del escenario; a lo alto, casi todo.
      El tope evita que tres palabras salgan con casillas de diez centímetros; el
      reparto por columnas evita que veinte se salgan del teléfono. Lo que no
      quepa lo resuelve el scroll horizontal del contenedor, que es de la
      cuadrícula y no de la página. */
   const lado = cruci
-    ? `clamp(28px, calc(88vw / ${cruci.ancho}), ${grande ? '6.5vh' : '2rem'})`
+    ? `max(28px, min(calc(55cqw / ${cruci.ancho}), calc(86cqh / ${cruci.alto}), 4.5rem))`
     : '2rem';
 
   /* EL NÚMERO NECESITA SU PROPIO SUELO. Es el texto más pequeño de toda la suite
@@ -156,17 +159,11 @@ const Crucigrama = ({ lang = 'es', grande = false }) => {
             pie: proyectadas desde el fondo de la sala no se leen, y son el
             contenido de la actividad, no su letra pequeña.
 
-            EN PANTALLA COMPLETA NO BASTA CON UN TAMAÑO FIJO MÁS GRANDE. Un
-            `text-xl` (20px) se ve bien en el teléfono —ahí 20px es mucho— pero
-            en un computador proyectado 20px sigue siendo nada: no crece con la
-            pantalla. `clamp()` sí: crece con el ancho de VERDAD, con un piso
-            para que no encoja de más y un techo para que no desborde la
-            columna, que aquí es angosta —dos listas lado a lado—. Mismo truco
-            que ya usa el lado de la casilla, un poco más abajo. */}
-        <ol
-          className={`space-y-1.5 ${grande ? '' : 'text-base'}`}
-          style={{ fontSize: grande ? 'clamp(1.25rem, 2vw, 2.5rem)' : undefined }}
-        >
+            UN TAMAÑO FIJO MÁS GRANDE NO BASTA: 20px en un computador
+            proyectado sigue siendo nada. Crece con el ESCENARIO (cqw), con un
+            piso para que no encoja de más y un techo para que no desborde la
+            columna de las pistas. Mismo truco que el lado de la casilla. */}
+        <ol className="space-y-1.5" style={{ fontSize: 'clamp(0.95rem, 1.45cqw, 2rem)' }}>
           {items.map(p => (
             /* CADA PISTA ES UN BOTÓN, y es el camino accesible de lo mismo que
                hace el número en la cuadrícula: destapar ESA palabra. La
@@ -221,200 +218,211 @@ const Crucigrama = ({ lang = 'es', grande = false }) => {
   );
 
   return (
-    <section className={grande ? 'w-full' : 'w-full max-w-xl mx-auto'}>
-      {!grande && (
-        <>
-          <h2 className="text-lg font-bold text-slate-900 mb-1 gh-no-print">{es ? 'Crucigrama' : 'Crossword'}</h2>
-          <p className="text-sm text-muted mb-4 gh-no-print">
-            {es ? 'Pega las palabras de la clase, una por línea, y sale un crucigrama. Se proyecta o se imprime.'
-                : 'Paste the words from today’s lesson, one per line, and out comes a crossword. Project it or print it.'}
+    <>
+      <Escenario>
+        {!cruci ? (
+          <p className="text-muted text-center max-w-sm">
+            {es ? 'Pega las palabras en el panel de la derecha y arma el crucigrama: aparece aquí.'
+                : 'Paste the words in the panel on the right and build the crossword: it shows up here.'}
           </p>
-        </>
-      )}
+        ) : (
+          <div className="w-full max-h-full overflow-auto">
+            {/* LA HOJA. Es lo único que se imprime: todo lo demás va al panel o
+                lleva `gh-no-print`. En PC, la cuadrícula a la izquierda y las
+                pistas a la derecha, como en el periódico: así cabe entero en una
+                pantalla apaisada. Impreso (hoja angosta), una debajo de la otra. */}
+            <div className="gh-hoja flex flex-col lg:flex-row lg:items-start gap-x-[3cqw] gap-y-4">
+              {/* LA CUADRÍCULA NO SE LE LEE A NADIE, y esto es deliberado. Son
+                  cientos de casillas sueltas: un lector de pantalla las recorrería
+                  en el orden del documento y diría «C, H, A, vacío, vacío, I…»,
+                  que no es el crucigrama sino su ruido. Lo que ESTÁ dicho es lo
+                  que se puede usar: cuántas casillas hay, y al lado las dos listas
+                  de pistas, que sí son listas de verdad, numeradas, con el largo
+                  de cada palabra y con la respuesta cuando se piden. */}
+              <p className="sr-only">
+                {es ? `Cuadrícula de ${cruci.alto} filas por ${cruci.ancho} columnas con ${cruci.colocadas.length} palabras cruzadas. Las palabras, su número y su largo están en las listas de pistas.`
+                    : `Grid of ${cruci.alto} rows by ${cruci.ancho} columns with ${cruci.colocadas.length} interlocking words. The words, their numbers and their lengths are in the clue lists.`}
+              </p>
+              <div className="overflow-x-auto shrink-0 mx-auto lg:mx-0">
+                <div
+                  aria-hidden="true"
+                  className="grid w-max"
+                  style={{ gridTemplateColumns: `repeat(${cruci.ancho}, ${lado})` }}
+                >
+                  {cruci.celdas.map((fila, f) => fila.map((letra, c) => {
+                    const num = letra ? numeroEn(f, c) : null;
+                    const arrancan = num ? empiezanEn(f, c) : [];
+                    /* SE TOCA LA CASILLA ENTERA, NO EL NÚMERO. El número mide diez
+                       píxeles en el peor caso y ahí no acierta nadie con el dedo;
+                       su casilla mide veintiocho como mínimo. Es el mismo gesto
+                       —señalar el número— con un blanco que existe de verdad. */
+                    const Casilla = arrancan.length ? 'button' : 'div';
+                    return (
+                      <Casilla
+                        key={`${f},${c}`}
+                        {...(arrancan.length ? {
+                          type: 'button',
+                          onClick: () => arrancan.forEach(revelar),
+                          /* FUERA DEL TABULADOR, a propósito. La cuadrícula está
+                             silenciada para el lector de pantalla —son cientos de
+                             casillas sueltas— y meter botones enfocables dentro de
+                             algo silenciado es una trampa: el foco entra donde no
+                             se anuncia nada. El camino accesible es la lista de
+                             pistas, donde cada pista es un botón que hace esto
+                             mismo y sí se anuncia. */
+                          tabIndex: -1,
+                        } : {})}
+                        className={letra ? `relative ${arrancan.length ? 'cursor-pointer' : ''}` : ''}
+                        style={{
+                          width: lado, height: lado, padding: 0,
+                          ...(letra ? { background: PAPEL, border: `1px solid ${TRAZO}` } : null),
+                        }}
+                      >
+                        {num && (
+                          <span className="absolute top-0 left-0.5 font-bold leading-none tabular-nums"
+                                style={{ color: NUMERO, fontSize: numeroTam }}>
+                            {num}
+                          </span>
+                        )}
+                        {letra && casillasALaVista.has(`${f},${c}`) && (
+                          <span className="gh-solucion absolute inset-0 flex items-center justify-center font-bold"
+                                style={{ color: TINTA, fontSize: `calc(${lado} * 0.55)` }}>
+                            {letra}
+                          </span>
+                        )}
+                      </Casilla>
+                    );
+                  }))}
+                </div>
+              </div>
 
-      {!cruci ? (
-        <div className="space-y-4">
-          <label className="block">
-            <span className="text-xs font-semibold text-slate-600">
-              {es ? 'Las palabras' : 'The words'}{' '}
-              <span className="font-normal text-muted">
-                {es ? '· una por línea, o varias separadas por comas; la pista, opcional, detrás de «=», «:» o entre paréntesis'
-                    : '· one per line, or several separated by commas; the clue, optional, after “=”, “:” or in brackets'}
-              </span>
-            </span>
-            <textarea
-              value={texto} rows={8}
-              onChange={(e) => setTexto(e.target.value)}
-              placeholder={es
-                ? 'célula\nnúcleo = controla la célula\nmembrana = la rodea y la protege'
-                : 'apple\nbanana = it is yellow and long\ncherry = a small red fruit'}
-              className="mt-1 w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-            />
-          </label>
-
-          <p className="text-xs text-muted">
-            {es ? `${lista.length} ${lista.length === 1 ? 'palabra' : 'palabras'}. Con menos de cuatro el crucigrama queda pobre; más de ${MAX_PALABRAS} no caben en una hoja.`
-                : `${lista.length} ${lista.length === 1 ? 'word' : 'words'}. Fewer than four makes a thin crossword; more than ${MAX_PALABRAS} will not fit on a sheet.`}
-          </p>
-
-          <button onClick={armar} disabled={lista.length < 2} className={ACCION}>
-            {es ? 'Armar el crucigrama' : 'Build the crossword'}
-          </button>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {/* LA HOJA. Es lo único que se imprime: todo lo demás lleva
-              `gh-no-print`. */}
-          <div className="gh-hoja">
-            {/* LA CUADRÍCULA NO SE LE LEE A NADIE, y esto es deliberado. Son
-                cientos de casillas sueltas: un lector de pantalla las recorrería
-                en el orden del documento y diría «C, H, A, vacío, vacío, I…»,
-                que no es el crucigrama sino su ruido. Lo que ESTÁ dicho es lo
-                que se puede usar: cuántas casillas hay, y debajo las dos listas
-                de pistas, que sí son listas de verdad, numeradas, con el largo
-                de cada palabra y con la respuesta cuando se piden. */}
-            <p className="sr-only">
-              {es ? `Cuadrícula de ${cruci.alto} filas por ${cruci.ancho} columnas con ${cruci.colocadas.length} palabras cruzadas. Las palabras, su número y su largo están en las listas de pistas que siguen.`
-                  : `Grid of ${cruci.alto} rows by ${cruci.ancho} columns with ${cruci.colocadas.length} interlocking words. The words, their numbers and their lengths are in the clue lists below.`}
-            </p>
-            <div className="overflow-x-auto">
-              <div
-                aria-hidden="true"
-                className="mx-auto grid w-max"
-                style={{ gridTemplateColumns: `repeat(${cruci.ancho}, ${lado})` }}
-              >
-                {cruci.celdas.map((fila, f) => fila.map((letra, c) => {
-                  const num = letra ? numeroEn(f, c) : null;
-                  const arrancan = num ? empiezanEn(f, c) : [];
-                  /* SE TOCA LA CASILLA ENTERA, NO EL NÚMERO. El número mide diez
-                     píxeles en el peor caso y ahí no acierta nadie con el dedo;
-                     su casilla mide veintiocho como mínimo. Es el mismo gesto
-                     —señalar el número— con un blanco que existe de verdad. */
-                  const Casilla = arrancan.length ? 'button' : 'div';
-                  return (
-                    <Casilla
-                      key={`${f},${c}`}
-                      {...(arrancan.length ? {
-                        type: 'button',
-                        onClick: () => arrancan.forEach(revelar),
-                        /* FUERA DEL TABULADOR, a propósito. La cuadrícula está
-                           silenciada para el lector de pantalla —son cientos de
-                           casillas sueltas— y meter botones enfocables dentro de
-                           algo silenciado es una trampa: el foco entra donde no
-                           se anuncia nada. El camino accesible es la lista de
-                           pistas, donde cada pista es un botón que hace esto
-                           mismo y sí se anuncia. */
-                        tabIndex: -1,
-                      } : {})}
-                      className={letra ? `relative ${arrancan.length ? 'cursor-pointer' : ''}` : ''}
-                      style={{
-                        width: lado, height: lado, padding: 0,
-                        ...(letra ? { background: PAPEL, border: `1px solid ${TRAZO}` } : null),
-                      }}
-                    >
-                      {num && (
-                        <span className="absolute top-0 left-0.5 font-bold leading-none tabular-nums"
-                              style={{ color: NUMERO, fontSize: numeroTam }}>
-                          {num}
-                        </span>
-                      )}
-                      {letra && casillasALaVista.has(`${f},${c}`) && (
-                        <span className="gh-solucion absolute inset-0 flex items-center justify-center font-bold"
-                              style={{ color: TINTA, fontSize: `calc(${lado} * 0.55)` }}>
-                          {letra}
-                        </span>
-                      )}
-                    </Casilla>
-                  );
-                }))}
+              <div className="min-w-0 flex-1 flex flex-col gap-y-5">
+                <Lista titulo={es ? 'Horizontales' : 'Across'} items={horizontales} />
+                <Lista titulo={es ? 'Verticales' : 'Down'} items={verticales} />
               </div>
             </div>
 
-            <div className={`mt-4 flex flex-col sm:flex-row gap-x-8 gap-y-4 ${grande ? 'max-w-5xl mx-auto' : ''}`}>
-              <Lista titulo={es ? 'Horizontales' : 'Across'} items={horizontales} />
-              <Lista titulo={es ? 'Verticales' : 'Down'} items={verticales} />
-            </div>
+            {/* «VER LAS RESPUESTAS» CAMBIA LA PANTALLA ENTERA y no dice nada al
+                oído: las letras aparecen dentro de una cuadrícula que está
+                silenciada a propósito. Aquí se cuenta lo que pasó. */}
+            <p role="status" aria-live="polite" className="sr-only">
+              {respuestas
+                ? (es ? 'Todas las respuestas a la vista, en la cuadrícula y en cada pista.' : 'All answers shown, in the grid and next to each clue.')
+                : reveladas.size > 0
+                  ? (es ? `${reveladas.size} ${reveladas.size === 1 ? 'palabra destapada' : 'palabras destapadas'}.` : `${reveladas.size} ${reveladas.size === 1 ? 'word revealed' : 'words revealed'}.`)
+                  : (es ? 'Respuestas ocultas.' : 'Answers hidden.')}
+            </p>
           </div>
+        )}
+      </Escenario>
 
-          {/* «VER LAS RESPUESTAS» CAMBIA LA PANTALLA ENTERA y no dice nada al
-              oído: las letras aparecen dentro de una cuadrícula que está
-              silenciada a propósito. Aquí se cuenta lo que pasó. */}
-          <p role="status" aria-live="polite" className="sr-only">
-            {respuestas
-              ? (es ? 'Todas las respuestas a la vista, en la cuadrícula y en cada pista.' : 'All answers shown, in the grid and next to each clue.')
-              : reveladas.size > 0
-                ? (es ? `${reveladas.size} ${reveladas.size === 1 ? 'palabra destapada' : 'palabras destapadas'}.` : `${reveladas.size} ${reveladas.size === 1 ? 'word revealed' : 'words revealed'}.`)
-                : (es ? 'Respuestas ocultas.' : 'Answers hidden.')}
-          </p>
+      <Panel>
+        <Cabeza titulo={es ? 'Crucigrama' : 'Crossword'}>
+          {es ? 'Pega las palabras de la clase, una por línea, y sale un crucigrama. Se proyecta o se imprime.'
+              : 'Paste the words from today’s lesson, one per line, and out comes a crossword. Project it or print it.'}
+        </Cabeza>
 
-          {/* LAS QUE NO ENTRARON. Va debajo de la hoja y fuera de ella: es
-              información para el docente, no para el alumno. */}
-          {(cruci.fuera.length > 0 || descartes.length > 0) && (
-            /* DOS MOTIVOS DISTINTOS, Y NO DAN EL MISMO CONSEJO. Una palabra que
-               no cruza puede entrar con «otra vez»; un renglón que se leyó mal
-               no va a entrar nunca por insistir, hay que separarlo. Decirle al
-               docente «prueba otra vez» ante lo segundo es mandarlo a repetir
-               algo que no puede funcionar. */
-            <div className="gh-no-print text-xs text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-2 space-y-1">
-              {cruci.fuera.length > 0 && (
-                <p>
-                  {es ? 'No entraron: ' : 'Left out: '}
-                  <strong>{cruci.fuera.map(p => p.original).join(', ')}</strong>
-                  {'. '}
-                  {es ? 'Una palabra sin letras en común con las demás no se puede cruzar. Prueba «otra vez».'
-                      : 'A word with no letters in common cannot cross anything. Try “again”.'}
-                </p>
-              )}
-              {descartes.length > 0 && (
-                <p>
-                  {es ? 'No se usaron: ' : 'Not used: '}
-                  <strong>{descartes.map(d => d.original).join(', ')}</strong>
-                  {'. '}
-                  {descartes.some(d => d.motivo === 'larga')
-                    ? (es ? 'Alguna quedó demasiado larga: suele pasar cuando un renglón trae varias palabras y el separador no se reconoce. Sepáralas con coma, o pon la pista detrás de «=», «:» o entre paréntesis.'
-                          : 'One is too long: that usually means a line held several words. Separate them with commas, or put the clue after “=”, “:” or in brackets.')
-                    : (es ? 'Estaban repetidas o eran demasiado cortas.' : 'They were duplicates or too short.')}
-                </p>
-              )}
+        {!cruci ? (
+          <div className="space-y-4">
+            <label className="block">
+              <span className="text-xs font-semibold text-slate-600">
+                {es ? 'Las palabras' : 'The words'}{' '}
+                <span className="font-normal text-muted">
+                  {es ? '· una por línea, o varias separadas por comas; la pista, opcional, detrás de «=», «:» o entre paréntesis'
+                      : '· one per line, or several separated by commas; the clue, optional, after “=”, “:” or in brackets'}
+                </span>
+              </span>
+              <textarea
+                value={texto} rows={10}
+                onChange={(e) => setTexto(e.target.value)}
+                placeholder={es
+                  ? 'célula\nnúcleo = controla la célula\nmembrana = la rodea y la protege'
+                  : 'apple\nbanana = it is yellow and long\ncherry = a small red fruit'}
+                className="mt-1 w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+              />
+            </label>
+
+            <p className="text-xs text-muted">
+              {es ? `${lista.length} ${lista.length === 1 ? 'palabra' : 'palabras'}. Con menos de cuatro el crucigrama queda pobre; más de ${MAX_PALABRAS} no caben en una hoja.`
+                  : `${lista.length} ${lista.length === 1 ? 'word' : 'words'}. Fewer than four makes a thin crossword; more than ${MAX_PALABRAS} will not fit on a sheet.`}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {/* LAS QUE NO ENTRARON. Va en el panel y no en la hoja: es
+                información para el docente, no para el alumno. */}
+            {(cruci.fuera.length > 0 || descartes.length > 0) && (
+              /* DOS MOTIVOS DISTINTOS, Y NO DAN EL MISMO CONSEJO. Una palabra que
+                 no cruza puede entrar con «otra vez»; un renglón que se leyó mal
+                 no va a entrar nunca por insistir, hay que separarlo. Decirle al
+                 docente «prueba otra vez» ante lo segundo es mandarlo a repetir
+                 algo que no puede funcionar. */
+              <div className="gh-no-print text-xs text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-2 space-y-1">
+                {cruci.fuera.length > 0 && (
+                  <p>
+                    {es ? 'No entraron: ' : 'Left out: '}
+                    <strong>{cruci.fuera.map(p => p.original).join(', ')}</strong>
+                    {'. '}
+                    {es ? 'Una palabra sin letras en común con las demás no se puede cruzar. Prueba «otra vez».'
+                        : 'A word with no letters in common cannot cross anything. Try “again”.'}
+                  </p>
+                )}
+                {descartes.length > 0 && (
+                  <p>
+                    {es ? 'No se usaron: ' : 'Not used: '}
+                    <strong>{descartes.map(d => d.original).join(', ')}</strong>
+                    {'. '}
+                    {descartes.some(d => d.motivo === 'larga')
+                      ? (es ? 'Alguna quedó demasiado larga: suele pasar cuando un renglón trae varias palabras y el separador no se reconoce. Sepáralas con coma, o pon la pista detrás de «=», «:» o entre paréntesis.'
+                            : 'One is too long: that usually means a line held several words. Separate them with commas, or put the clue after “=”, “:” or in brackets.')
+                      : (es ? 'Estaban repetidas o eran demasiado cortas.' : 'They were duplicates or too short.')}
+                  </p>
+                )}
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-2">
+              {/* «Ocultar» tapa TODO —lo destapado de una en una también—, que es
+                  lo que la palabra promete. Y aparece en cuanto hay algo a la
+                  vista, aunque sea una sola palabra: si no, destapar tres a mano
+                  dejaría el botón diciendo «ver las respuestas» sin manera de
+                  volver atrás. */}
+              <button
+                onClick={() => (algoALaVista ? taparTodo() : setRespuestas(true))}
+                aria-pressed={algoALaVista}
+                className={APAGADO}
+              >
+                {algoALaVista ? (es ? 'Ocultar respuestas' : 'Hide answers') : (es ? 'Ver las respuestas' : 'Show answers')}
+              </button>
+              <button onClick={() => window.print()} className={APAGADO}>
+                {es ? 'Imprimir' : 'Print'}
+              </button>
+              <button onClick={armar} className={APAGADO}>{es ? 'Otra vez' : 'Again'}</button>
             </div>
-          )}
 
-          <div className="gh-no-print flex flex-wrap gap-2">
-            <button onClick={armar} className={`flex-1 ${APAGADO}`}>{es ? 'Otra vez' : 'Again'}</button>
-            {/* «Ocultar» tapa TODO —lo destapado de una en una también—, que es
-                lo que la palabra promete. Y aparece en cuanto hay algo a la
-                vista, aunque sea una sola palabra: si no, destapar tres a mano
-                dejaría el botón diciendo «ver las respuestas» sin manera de
-                volver atrás. */}
-            <button
-              onClick={() => (algoALaVista ? taparTodo() : setRespuestas(true))}
-              aria-pressed={algoALaVista}
-              className={`flex-1 ${APAGADO}`}
-            >
-              {algoALaVista ? (es ? 'Ocultar respuestas' : 'Hide answers') : (es ? 'Ver las respuestas' : 'Show answers')}
-            </button>
-            <button onClick={() => window.print()} className={`flex-1 ${APAGADO}`}>
-              {es ? 'Imprimir' : 'Print'}
+            {/* Que se pueda destapar de a una no se ve mirando: hay que decirlo. */}
+            <p className="text-xs text-muted">
+              {es ? 'Toca el número de una palabra en la cuadrícula —o su pista— para destapar solo esa.'
+                  : 'Tap a word’s number in the grid — or its clue — to reveal just that one.'}
+            </p>
+            <p className="text-xs text-muted">
+              {es ? 'Lo impreso es siempre la hoja del alumno: cuadrícula vacía y pistas, sin respuestas aunque estén a la vista aquí.'
+                  : 'What prints is always the student sheet: empty grid and clues, with no answers even if they are showing here.'}
+            </p>
+
+            <button onClick={() => { setCruci(null); taparTodo(); }} className={ENLACE}>
+              {es ? 'cambiar las palabras' : 'change the words'}
             </button>
           </div>
+        )}
+      </Panel>
 
-          {/* Que se pueda destapar de a una no se ve mirando: hay que decirlo. */}
-          <p className="gh-no-print text-xs text-muted">
-            {es ? 'Toca el número de una palabra en la cuadrícula —o su pista— para destapar solo esa.'
-                : 'Tap a word’s number in the grid — or its clue — to reveal just that one.'}
-          </p>
-
-          <p className="gh-no-print text-xs text-muted">
-            {es ? 'Lo impreso es siempre la hoja del alumno: cuadrícula vacía y pistas, sin respuestas aunque estén a la vista aquí.'
-                : 'What prints is always the student sheet: empty grid and clues, with no answers even if they are showing here.'}
-          </p>
-
-          <button onClick={() => { setCruci(null); taparTodo(); }} className={`gh-no-print ${ENLACE}`}>
-            {es ? 'cambiar las palabras' : 'change the words'}
-          </button>
-        </div>
+      {!cruci && (
+        <Accion onClick={armar} disabled={lista.length < 2}>
+          {es ? 'Armar el crucigrama' : 'Build the crossword'}
+        </Accion>
       )}
-    </section>
+    </>
   );
 };
 

@@ -51,14 +51,15 @@ import { partirEnHuecos, tieneTexto, HUECO } from '../molde';
 import { formatoReloj, estadoReloj } from '../temporizador';
 import CargarCurso from './CargarCurso';
 import OrigenLista from './OrigenLista';
-import { ACCION, APAGADO, opcion, ENLACE } from '../ui';
+import { APAGADO, opcion, ENLACE } from '../ui';
+import { Panel, Escenario, Accion, Cabeza } from '../zonas';
 
 /* Minuto y medio por defecto. Menos no alcanza para releer lo que se hizo y
    más se convierte en tiempo muerto: se nota en la sala cuando sobra. */
 const SEGUNDOS = [60, 90, 120];
 const CUANTOS = 3;
 
-const Duda = ({ lang = 'es', curso = [], origen = null, onCargar, onCambiarLista, onCambiarFecha, grande = false }) => {
+const Duda = ({ lang = 'es', curso = [], origen = null, onCargar, onCambiarLista, onCambiarFecha }) => {
   const es = lang === 'es';
 
   const [fase, setFase] = useState('preparar');
@@ -89,14 +90,14 @@ const Duda = ({ lang = 'es', curso = [], origen = null, onCargar, onCambiarLista
     setFase('leer');
   };
 
-  /* Las medidas de proyección, atadas al alto además de al ancho: el molde es
-     una frase larga y el reloj es alto, y con `vw` solo, en 1280×720 el
-     conjunto se salía. Mismo criterio que el semáforo. */
+  /* Las medidas, atadas al alto además de al ancho: el molde es una frase larga
+     y el reloj es alto, y con el ancho solo, en 1280×720 el conjunto se salía.
+     Mismo criterio que el semáforo. Contra el ESCENARIO (cqw/cqh). */
   const M = {
-    molde:  'min(4vw, 8vh)',
-    reloj:  'min(9vw, 16vh)',
-    nombre: 'min(3.4vw, 6vh)',
-    rotulo: 'min(2vw, 3.6vh)',
+    molde:  'max(1.1rem, min(4.2cqw, 8.5cqh))',
+    reloj:  'max(2.5rem, min(10cqw, 18cqh))',
+    nombre: 'max(1.2rem, min(3.6cqw, 6.5cqh))',
+    rotulo: 'max(0.8rem, min(2cqw, 3.6cqh))',
   };
 
   const estado = estadoReloj(restante);
@@ -105,10 +106,7 @@ const Duda = ({ lang = 'es', curso = [], origen = null, onCargar, onCambiarLista
      misma tinta que las palabras compiten con ellas, y lo que hay que leer es
      la frase. */
   const Molde = () => (
-    <p
-      className={`text-center font-bold text-slate-900 ${grande ? 'leading-tight' : 'text-xl sm:text-2xl'}`}
-      style={{ fontSize: grande ? M.molde : undefined }}
-    >
+    <p className="text-center font-bold text-slate-900 leading-tight" style={{ fontSize: M.molde }}>
       {partirEnHuecos(texto).map((t, i) =>
         t.tipo === 'hueco'
           ? <span key={i} className="text-muted">{t.valor}</span>
@@ -117,9 +115,8 @@ const Duda = ({ lang = 'es', curso = [], origen = null, onCargar, onCambiarLista
     </p>
   );
 
-  /* La puerta a la lista del curso. Va plegada y DESPUÉS de la acción: sin
-     lista la herramienta funciona igual, así que quien no la quiera no
-     tropieza con ella. */
+  /* La puerta a la lista del curso. Va plegada: sin lista la herramienta
+     funciona igual, así que quien no la quiera no tropieza con ella. */
   const PuertaLista = () => (
     <details className="rounded-xl border border-slate-200 bg-white px-4 py-3">
       <summary className="text-sm font-semibold text-slate-700 cursor-pointer">
@@ -146,129 +143,142 @@ const Duda = ({ lang = 'es', curso = [], origen = null, onCargar, onCambiarLista
   );
 
   return (
-    <section className={grande ? 'w-full' : 'w-full max-w-xl mx-auto'}>
-      {!grande && (
-        <>
-          <h2 className="text-lg font-bold text-slate-900 mb-1">{es ? 'La duda' : 'The doubt'}</h2>
-          <p className="text-sm text-muted mb-4">
-            {es ? 'Para cerrar: cada uno nombra lo que le quedó a medias, con un molde que escribes tú.'
-                : 'To close the lesson: everyone names what is still unclear, with a frame you write.'}
-          </p>
-        </>
-      )}
+    <>
+      <Escenario>
+        {/* ── PREPARAR: el molde como lo verá el curso ────────────────────── */}
+        {fase === 'preparar' && (
+          tieneTexto(texto) ? <div className="w-full"><Molde /></div> : (
+            <p className="text-muted text-center max-w-sm">
+              {es ? 'Escribe el molde en el panel de la derecha: aquí se ve como lo verá el curso.'
+                  : 'Write the frame in the panel on the right: here it shows as the class will see it.'}
+            </p>
+          )
+        )}
 
-      {/* ── PREPARAR ──────────────────────────────────────────────────────── */}
-      {fase === 'preparar' && (
-        <div className="space-y-4">
-          <label className="block">
-            <span className="text-xs font-semibold text-slate-600">
-              {es ? 'El molde' : 'The frame'}{' '}
-              <span className="font-normal text-muted">
-                {es ? '· los huecos se escriben con guiones bajos: ______'
-                    : '· write the blanks with underscores: ______'}
-              </span>
-            </span>
-            <textarea
-              value={texto} rows={2}
-              onChange={(e) => { setTexto(e.target.value); }}
-              placeholder={es ? `De lo de hoy, todavía no me sale ${HUECO}.` : `From today, I still cannot ${HUECO}.`}
-              className="mt-1 w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-            />
-          </label>
+        {/* ── ESCRIBIR ─────────────────────────────────────────────────────── */}
+        {fase === 'escribir' && (
+          <div className="w-full space-y-[3cqh]">
+            <Molde />
+            <p className="text-center text-muted" style={{ fontSize: M.rotulo }}>
+              {es ? 'En silencio. Vale decir «casi todo»: eso también es un lugar.'
+                  : 'In silence. “Almost everything” is a valid answer: that is a place too.'}
+            </p>
+            <p className={`text-center font-extrabold tabular-nums leading-none ${
+                estado === 'normal' ? 'text-slate-900' : 'text-red-600'
+              }`}
+              style={{ fontSize: M.reloj }}>
+              {formatoReloj(restante)}
+            </p>
+          </div>
+        )}
 
-          <div>
-            <p className="text-xs font-semibold text-slate-600 mb-1.5">{es ? 'Para escribirla' : 'To write it'}</p>
-            <div className="flex flex-wrap gap-1.5">
-              {SEGUNDOS.map(sg => (
-                <button key={sg} onClick={() => { setTotal(sg); setRestante(sg); }} aria-pressed={total === sg}
-                        className={opcion(total === sg)}>
-                  {formatoReloj(sg)}
-                </button>
-              ))}
+        {/* ── LEER ─────────────────────────────────────────────────────────── */}
+        {fase === 'leer' && (
+          <div className="w-full space-y-[3cqh]">
+            <Molde />
+            <div aria-live="polite" className="text-center">
+              <p className="font-bold uppercase tracking-wider" style={{ color: 'var(--marca)', fontSize: M.rotulo }}>
+                {es ? 'Y ahora cuentan' : 'And now they tell us'}
+              </p>
+              {elegidos.length ? (
+                <ul className="mt-2 flex flex-wrap justify-center gap-x-6 gap-y-1 font-bold text-slate-900"
+                    style={{ fontSize: M.nombre }}>
+                  {elegidos.map(n => <li key={n}>{n}</li>)}
+                </ul>
+              ) : (
+                <p className="mt-2 font-bold text-slate-900" style={{ fontSize: M.nombre }}>
+                  {es ? 'Tres voluntarios' : 'Three volunteers'}
+                </p>
+              )}
             </div>
           </div>
+        )}
+      </Escenario>
 
-          {tieneTexto(texto) && (
-            <div className="rounded-xl border border-slate-200 bg-white px-4 py-4">
-              <Molde />
+      <Panel>
+        <Cabeza titulo={es ? 'La duda' : 'The doubt'}>
+          {es ? 'Para cerrar: cada uno nombra lo que le quedó a medias, con un molde que escribes tú.'
+              : 'To close the lesson: everyone names what is still unclear, with a frame you write.'}
+        </Cabeza>
+
+        {fase === 'preparar' && (
+          <div className="space-y-4">
+            <label className="block">
+              <span className="text-xs font-semibold text-slate-600">
+                {es ? 'El molde' : 'The frame'}{' '}
+                <span className="font-normal text-muted">
+                  {es ? '· los huecos se escriben con guiones bajos: ______'
+                      : '· write the blanks with underscores: ______'}
+                </span>
+              </span>
+              <textarea
+                value={texto} rows={3}
+                onChange={(e) => { setTexto(e.target.value); }}
+                placeholder={es ? `De lo de hoy, todavía no me sale ${HUECO}.` : `From today, I still cannot ${HUECO}.`}
+                className="mt-1 w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+              />
+            </label>
+
+            <div>
+              <p className="text-xs font-semibold text-slate-600 mb-1.5">{es ? 'Para escribirla' : 'To write it'}</p>
+              <div className="flex flex-wrap gap-1.5">
+                {SEGUNDOS.map(sg => (
+                  <button key={sg} onClick={() => { setTotal(sg); setRestante(sg); }} aria-pressed={total === sg}
+                          className={opcion(total === sg)}>
+                    {formatoReloj(sg)}
+                  </button>
+                ))}
+              </div>
             </div>
-          )}
 
-          <button onClick={arrancar} disabled={!tieneTexto(texto)} className={ACCION}>
-            {es ? 'Proyectar' : 'Project it'}
-          </button>
+            <PuertaLista />
+          </div>
+        )}
 
-          <PuertaLista />
-        </div>
-      )}
-
-      {/* ── ESCRIBIR ──────────────────────────────────────────────────────── */}
-      {fase === 'escribir' && (
-        <div className="space-y-4">
-          <Molde />
-          <p className="text-center text-muted" style={{ fontSize: grande ? M.rotulo : undefined }}>
-            {es ? 'En silencio. Vale decir «casi todo»: eso también es un lugar.'
-                : 'In silence. “Almost everything” is a valid answer: that is a place too.'}
-          </p>
-          <p
-            className={`text-center font-extrabold tabular-nums leading-none ${
-              estado === 'normal' ? 'text-slate-900' : 'text-red-600'
-            } ${grande ? '' : 'text-6xl'}`}
-            style={{ fontSize: grande ? M.reloj : undefined }}
-          >
-            {formatoReloj(restante)}
-          </p>
-
-          <div className={grande ? 'max-w-3xl mx-auto' : ''}>
-            <button onClick={sortear} className={ACCION}>
-              {curso.length ? (es ? 'A quién le toca' : 'Whose turn') : (es ? 'Se acabó' : 'Time is up')}
-            </button>
-            <button onClick={() => { clearInterval(tick.current); setFase('preparar'); }} className={`mt-2 w-full ${APAGADO}`}>
+        {fase === 'escribir' && (
+          <div className="space-y-3">
+            <p className="text-sm text-slate-600">
+              {curso.length
+                ? (es ? `Al terminar, salen tres nombres de los ${curso.length} presentes.` : `When it ends, three names come out of the ${curso.length} present.`)
+                : (es ? 'Sin lista del curso: al terminar se piden tres voluntarios.' : 'No class list: when it ends, ask for three volunteers.')}
+            </p>
+            <button onClick={() => { clearInterval(tick.current); setFase('preparar'); }} className={`w-full ${APAGADO}`}>
               {es ? 'Cambiar el molde' : 'Change the frame'}
             </button>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* ── LEER ──────────────────────────────────────────────────────────── */}
-      {fase === 'leer' && (
-        <div className="space-y-4">
-          <Molde />
-          <div aria-live="polite" className="text-center">
-            <p className="font-bold uppercase tracking-wider" style={{ color: 'var(--marca)', fontSize: grande ? M.rotulo : undefined }}>
-              {es ? 'Y ahora cuentan' : 'And now they tell us'}
-            </p>
-            {elegidos.length ? (
-              <ul className={`mt-2 flex flex-wrap justify-center gap-x-6 gap-y-1 font-bold text-slate-900 ${grande ? '' : 'text-2xl'}`}
-                  style={{ fontSize: grande ? M.nombre : undefined }}>
-                {elegidos.map(n => <li key={n}>{n}</li>)}
-              </ul>
-            ) : (
-              <p className={`mt-2 font-bold text-slate-900 ${grande ? '' : 'text-2xl'}`}
-                 style={{ fontSize: grande ? M.nombre : undefined }}>
-                {es ? 'Tres voluntarios' : 'Three volunteers'}
+        {fase === 'leer' && (
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-2">
+              {curso.length > CUANTOS && (
+                <button onClick={sortear} className={APAGADO}>{es ? 'Otros tres' : 'Another three'}</button>
+              )}
+              <button onClick={() => setFase('preparar')} className={APAGADO}>
+                {es ? 'Otra duda' : 'Another doubt'}
+              </button>
+            </div>
+            {!curso.length && (
+              <p className="text-xs text-muted">
+                {es ? 'Con la lista del curso cargada, aquí salen tres nombres de quienes vinieron hoy. Se carga al escribir el molde.'
+                    : 'With the class list loaded, three names of whoever came today show up here. You load it while writing the frame.'}
               </p>
             )}
           </div>
+        )}
+      </Panel>
 
-          <div className={`flex flex-wrap gap-2 ${grande ? 'max-w-3xl mx-auto' : ''}`}>
-            {curso.length > CUANTOS && (
-              <button onClick={sortear} className={`flex-1 ${APAGADO}`}>{es ? 'Otros tres' : 'Another three'}</button>
-            )}
-            <button onClick={() => setFase('preparar')} className={`flex-1 ${APAGADO}`}>
-              {es ? 'Otra duda' : 'Another doubt'}
-            </button>
-          </div>
-
-          {!curso.length && (
-            <p className="text-xs text-muted text-center">
-              {es ? 'Con la lista del curso cargada, aquí salen tres nombres de quienes vinieron hoy. Se carga al escribir el molde.'
-                  : 'With the class list loaded, three names of whoever came today show up here. You load it while writing the frame.'}
-            </p>
-          )}
-        </div>
+      {fase === 'preparar' && (
+        <Accion onClick={arrancar} disabled={!tieneTexto(texto)}>
+          {es ? 'Proyectar' : 'Project it'}
+        </Accion>
       )}
-    </section>
+      {fase === 'escribir' && (
+        <Accion onClick={sortear}>
+          {curso.length ? (es ? 'A quién le toca' : 'Whose turn') : (es ? 'Se acabó' : 'Time is up')}
+        </Accion>
+      )}
+    </>
   );
 };
 

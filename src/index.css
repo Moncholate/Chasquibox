@@ -43,7 +43,10 @@
      línea, y una regla de color que blanquea una acaba ennegreciendo la otra.
      Ocultar por visibilidad además deja el hueco, así que la casilla mantiene su
      tamaño y la línea de la pista no se descoloca. */
-  .gh-hoja .gh-solucion { visibility: hidden !important; }
+  /* Y TAMBIÉN LO QUE VA DENTRO: `.gh-hoja *` de arriba vuelve visible a cada
+     hijo, así que la flecha «→» de la respuesta —un span dentro de la
+     solución— salía impresa sola junto a la pista. */
+  .gh-hoja .gh-solucion, .gh-hoja .gh-solucion * { visibility: hidden !important; }
   /* En la sopa la solución no es tinta sino un FONDO: las casillas de las
      palabras van resaltadas. Ocultar por visibilidad no vale —se llevaría la
      letra, que sí tiene que imprimirse— así que se le devuelve el papel. */
@@ -55,6 +58,17 @@
      reparte sale limpia, se haya resuelto antes en pantalla o no. */
   .gh-hoja .gh-hallada { text-decoration: none !important; }
   .gh-no-print { display: none !important; }
+  /* EL MARCO DE LA PANTALLA NO SE IMPRIME CON SUS MEDIDAS. Desde que la app es
+     de PC, la hoja vive dentro del escenario: un alto de pantalla fijo, con
+     scroll y con el menú a la izquierda. Impresa así salía recortada a una
+     página y corrida lo que mide el menú. `gh-libre` marca esos contenedores
+     (PanelDocente.jsx) y aquí vuelven a ser cajas normales, así la hoja se
+     posiciona contra la página y sigue en la siguiente si no cabe. */
+  .gh-libre {
+    position: static !important; overflow: visible !important;
+    height: auto !important; min-height: 0 !important;
+    display: block !important; container-type: normal !important;
+  }
   @page { margin: 12mm; }
 }
 

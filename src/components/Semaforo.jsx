@@ -41,7 +41,8 @@
    ========================================================================== */
 import React, { useState } from 'react';
 import { lectura, sumar, VACIO } from '../semaforo';
-import { ACCION, APAGADO, opcion, ENLACE } from '../ui';
+import { APAGADO, ENLACE } from '../ui';
+import { Panel, Escenario, Accion, Cabeza } from '../zonas';
 
 /* Colores de LÁMPARA, no de interfaz: verde, ámbar y rojo de semáforo de calle.
    Van fijos en los dos temas porque la carcasa también es fija — es un objeto
@@ -84,7 +85,7 @@ const NIVELES = [
   { id: 'rojo',  texto: 'Todavía no lo puedo hacer solo' },
 ];
 
-const Semaforo = ({ lang = 'es', grande = false }) => {
+const Semaforo = ({ lang = 'es' }) => {
   const es = lang === 'es';
 
   const [fase, setFase] = useState('preparar');
@@ -101,22 +102,22 @@ const Semaforo = ({ lang = 'es', grande = false }) => {
 
   const empezar = () => { setConteo(VACIO); setFase('contar'); };
 
-  /* Lo que se lee de lejos. En `grande` crece el objetivo y crece el semáforo;
-     los controles se quedan como están, que es lo que hace que quepan.
+  /* Lo que se lee de lejos va al escenario y crece con él; los controles van
+     al panel.
 
-     Y las medidas de proyección van atadas al ALTO además de al ancho. Las
-     otras herramientas proyectan una línea y les basta con `vw`; aquí hay
-     carcasa, tres niveles y la lectura de abajo, y con `vw` solo, un proyector
-     de 1280×720 —el más chico que se encuentra en una sala— dejaba la frase
-     final fuera de la pantalla. `min()` deja que mande la dimensión que
-     escasee. Va en `style` y no en clases: son fórmulas, no una escala. */
+     Y las medidas van atadas al ALTO además de al ancho. Aquí hay carcasa, tres
+     niveles y la lectura de abajo, y con el ancho solo, un proyector de
+     1280×720 —el más chico que se encuentra en una sala— dejaba la frase final
+     fuera de la pantalla. `min()` deja que mande la dimensión que escasee.
+     Contra el ESCENARIO (cqw/cqh), no la ventana. Va en `style` y no en
+     clases: son fórmulas, no una escala. */
   const M = {
-    rotulo:  'min(2.2vw, 4vh)',
-    frase:   'min(4vw, 8vh)',
-    lampara: 'min(11.5vh, 8vw)',
-    nivel:   'min(1.9vw, 3.6vh)',
-    numero:  'min(1.5vw, 2.8vh)',
-    lectura: 'min(2.2vw, 4vh)',
+    rotulo:  'max(0.75rem, min(2cqw, 3.6cqh))',
+    frase:   'max(1.1rem, min(3.8cqw, 7cqh))',
+    lampara: 'max(2.5rem, min(11.5cqh, 8cqw))',
+    nivel:   'max(0.85rem, min(1.9cqw, 3.6cqh))',
+    numero:  'max(0.75rem, min(1.5cqw, 2.8cqh))',
+    lectura: 'max(0.95rem, min(2.2cqw, 4cqh))',
   };
   const Objetivo = () => (
     <div className="text-center">
@@ -126,13 +127,12 @@ const Semaforo = ({ lang = 'es', grande = false }) => {
           La variable es justo lo que los tokens ofrecen para «el acento de
           interfaz», con un valor por tema: 6,1:1 en los dos. */}
       {titulo && (
-        <p className={`font-bold uppercase tracking-wider ${grande ? '' : 'text-xs'}`}
-           style={{ color: 'var(--marca)', fontSize: grande ? M.rotulo : undefined }}>
+        <p className="font-bold uppercase tracking-wider"
+           style={{ color: 'var(--marca)', fontSize: M.rotulo }}>
           {titulo}
         </p>
       )}
-      <p className={`font-bold text-slate-900 ${grande ? 'leading-tight mt-2' : 'text-xl sm:text-2xl mt-1'}`}
-         style={{ fontSize: grande ? M.frase : undefined }}>
+      <p className="font-bold text-slate-900 leading-tight mt-2" style={{ fontSize: M.frase }}>
         {frase}
       </p>
     </div>
@@ -141,9 +141,9 @@ const Semaforo = ({ lang = 'es', grande = false }) => {
   /* La carcasa con las tres lámparas. El hueco de cada lámpara mide siempre lo
      máximo aunque la luz esté chica: si el hueco encogiera, las tres se moverían
      de sitio en cada conteo y el semáforo dejaría de ser un objeto quieto. */
-  const maxLampara = grande ? M.lampara : '4.6rem';
+  const maxLampara = M.lampara;
   const Luz = ({ id, brillo, tamano, votos, texto, encendido }) => (
-    <div className="flex items-center gap-3 sm:gap-4">
+    <div className="flex items-center gap-[2cqw]">
       <div
         className="relative shrink-0 flex items-center justify-center"
         style={{ width: maxLampara, height: maxLampara }}
@@ -165,18 +165,17 @@ const Semaforo = ({ lang = 'es', grande = false }) => {
             /* El halo crece con el brillo: es lo que hace que una luz encendida
                se lea como encendida y no como un círculo de color. */
             boxShadow: encendido && brillo > 0.3
-              ? `0 0 ${Math.round(brillo * (grande ? 70 : 30))}px ${LAMPARA[id]}`
+              ? `0 0 ${Math.round(brillo * 60)}px ${LAMPARA[id]}`
               : 'none',
           }}
         />
       </div>
       <div className="min-w-0 flex-1">
-        <p className={`font-semibold text-white ${grande ? 'leading-snug' : 'text-sm sm:text-base'}`}
-           style={{ fontSize: grande ? M.nivel : undefined }}>
+        <p className="font-semibold text-white leading-snug" style={{ fontSize: M.nivel }}>
           {texto}
         </p>
         {encendido && (
-          <p className={`font-bold tabular-nums ${grande ? '' : 'text-xs'}`} style={{ color: TINTA[id], fontSize: grande ? M.numero : undefined }}>
+          <p className="font-bold tabular-nums" style={{ color: TINTA[id], fontSize: M.numero }}>
             {votos}
           </p>
         )}
@@ -185,11 +184,8 @@ const Semaforo = ({ lang = 'es', grande = false }) => {
   );
 
   const Carcasa = ({ encendido }) => (
-    <div
-      className={`mx-auto rounded-3xl ${grande ? 'px-8 py-6' : 'px-5 py-5'}`}
-      style={{ background: CARCASA, maxWidth: grande ? '54rem' : '30rem' }}
-    >
-      <div className={`flex flex-col ${grande ? 'gap-4' : 'gap-3'}`}>
+    <div className="mx-auto rounded-3xl px-[3cqw] py-[3cqh]" style={{ background: CARCASA, maxWidth: '54rem' }}>
+      <div className="flex flex-col gap-[2cqh]">
         {NIVELES.map(n => {
           const l = r.luces.find(x => x.id === n.id);
           return <Luz key={n.id} id={n.id} texto={n.texto} encendido={encendido}
@@ -199,73 +195,92 @@ const Semaforo = ({ lang = 'es', grande = false }) => {
     </div>
   );
 
+  const manos = `${r.total} ${es ? (r.total === 1 ? 'mano contada' : 'manos contadas') : (r.total === 1 ? 'hand counted' : 'hands counted')}`;
+
   return (
-    <section className={grande ? 'w-full' : 'w-full max-w-xl mx-auto'}>
-      {!grande && (
-        <>
-          <h2 className="text-lg font-bold text-slate-900 mb-1">{es ? 'Semáforo' : 'Traffic light'}</h2>
-          <p className="text-sm text-muted mb-4">
-            {es ? 'Para cerrar: el curso se autoevalúa contra un criterio y se ve dónde está.'
-                : 'To close the lesson: the class self-assesses against a criterion and sees where it stands.'}
-          </p>
-        </>
-      )}
+    <>
+      <Escenario>
+        {/* ── PREPARAR: el objetivo como lo verá el curso ─────────────────── */}
+        {fase === 'preparar' && (
+          frase ? <div className="w-full"><Objetivo /></div> : (
+            <p className="text-muted text-center max-w-sm">
+              {es ? 'Escribe el objetivo de hoy en el panel de la derecha: aquí se ve como lo verá el curso.'
+                  : 'Write today’s objective in the panel on the right: here it shows as the class will see it.'}
+            </p>
+          )
+        )}
 
-      {/* ── PREPARAR ──────────────────────────────────────────────────────── */}
-      {fase === 'preparar' && (
-        <div className="space-y-4">
-          <label className="block">
-            <span className="text-xs font-semibold text-slate-600">
-              {es ? 'El objetivo de hoy' : 'Today’s objective'}{' '}
-              <span className="font-normal text-muted">
-                {es ? '· en inglés, como se lo dirías al curso' : '· in English, as you would say it to the class'}
+        {/* ── CONTAR: los tres niveles SIN luces. El curso tiene que poder
+            leerlos para levantar la mano, pero no ver cómo va el reparto. ── */}
+        {fase === 'contar' && (
+          <div className="w-full space-y-[3cqh]">
+            <Objetivo />
+            <Carcasa encendido={false} />
+            {/* Cuántas van, NO cómo van repartidas: el profesor necesita lo
+                primero para no perder la cuenta y lo segundo es justo lo que no
+                puede verse todavía. */}
+            <p className="text-center text-muted tabular-nums" style={{ fontSize: M.numero }}>{manos}</p>
+          </div>
+        )}
+
+        {/* ── MOSTRAR ─────────────────────────────────────────────────────── */}
+        {fase === 'mostrar' && (
+          <div className="w-full space-y-[3cqh]" aria-live="polite">
+            <Objetivo />
+            <Carcasa encendido />
+            {/* La lectura en una frase, que es lo que se dice en voz alta. Con
+                empate no se canta ninguna: elegir por ellos sería inventar. */}
+            <p className="text-center font-bold text-slate-900" style={{ fontSize: M.lectura }}>
+              {r.dominante
+                ? (es ? `El curso está en ${{ verde: 'verde', ambar: 'ámbar', rojo: 'rojo' }[r.dominante]}.`
+                      : `The class is on ${{ verde: 'green', ambar: 'amber', rojo: 'red' }[r.dominante]}.`)
+                : (es ? 'El curso está repartido.' : 'The class is split.')}
+            </p>
+          </div>
+        )}
+      </Escenario>
+
+      <Panel>
+        <Cabeza titulo={es ? 'Semáforo' : 'Traffic light'}>
+          {es ? 'Para cerrar: el curso se autoevalúa contra un criterio y se ve dónde está.'
+              : 'To close the lesson: the class self-assesses against a criterion and sees where it stands.'}
+        </Cabeza>
+
+        {fase === 'preparar' && (
+          <div className="space-y-4">
+            <label className="block">
+              <span className="text-xs font-semibold text-slate-600">
+                {es ? 'El objetivo de hoy' : 'Today’s objective'}{' '}
+                <span className="font-normal text-muted">
+                  {es ? '· en inglés, como se lo dirías al curso' : '· in English, as you would say it to the class'}
+                </span>
               </span>
-            </span>
-            <input
-              type="text" value={objetivo}
-              onChange={(e) => { setObjetivo(e.target.value); }}
-              placeholder={es ? 'Puedo explicar la fotosíntesis con mis palabras.' : 'I can order food in a restaurant.'}
-              className="mt-1 w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-            />
-          </label>
+              <input
+                type="text" value={objetivo}
+                onChange={(e) => { setObjetivo(e.target.value); }}
+                placeholder={es ? 'Puedo explicar la fotosíntesis con mis palabras.' : 'I can order food in a restaurant.'}
+                className="mt-1 w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+              />
+            </label>
 
-          {/* Un rótulo opcional encima del objetivo: el tema de la clase. Lo
-              rellenan las sugerencias con el nombre del tiempo, y a mano sirve
-              para poner «Food», «Unit 4» o lo que sea que se trabajó. */}
-          <label className="block">
-            <span className="text-xs font-semibold text-slate-600">
-              {es ? 'Tema' : 'Topic'}{' '}
-              <span className="font-normal text-muted">{es ? '· opcional, va encima' : '· optional, sits above'}</span>
-            </span>
-            <input
-              type="text" value={rotulo} onChange={(e) => setRotulo(e.target.value)}
-              placeholder={es ? 'Unidad 3 · La célula' : 'Food · Unit 4 · Present Perfect'}
-              className="mt-1 w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-            />
-          </label>
+            {/* Un rótulo opcional encima del objetivo: el tema de la clase.
+                Sirve para poner «Food», «Unit 4» o lo que sea que se trabajó. */}
+            <label className="block">
+              <span className="text-xs font-semibold text-slate-600">
+                {es ? 'Tema' : 'Topic'}{' '}
+                <span className="font-normal text-muted">{es ? '· opcional, va encima' : '· optional, sits above'}</span>
+              </span>
+              <input
+                type="text" value={rotulo} onChange={(e) => setRotulo(e.target.value)}
+                placeholder={es ? 'Unidad 3 · La célula' : 'Food · Unit 4 · Present Perfect'}
+                className="mt-1 w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+              />
+            </label>
+          </div>
+        )}
 
-          {frase && (
-            <div className="rounded-xl border border-slate-200 bg-white px-4 py-4">
-              <Objetivo />
-            </div>
-          )}
-
-          <button onClick={empezar} disabled={!frase} className={ACCION}>
-            {es ? 'Proyectar' : 'Project it'}
-          </button>
-
-        </div>
-      )}
-
-      {/* ── CONTAR ────────────────────────────────────────────────────────── */}
-      {fase === 'contar' && (
-        <div className="space-y-4">
-          <Objetivo />
-          {/* Los tres niveles SIN luces: el curso tiene que poder leerlos para
-              levantar la mano, pero no ver cómo va el reparto. */}
-          <Carcasa encendido={false} />
-
-          <div className={grande ? 'max-w-3xl mx-auto' : ''}>
+        {fase === 'contar' && (
+          <div>
             <p className="text-xs font-semibold text-slate-600 mb-1.5">
               {es ? 'Cuenta las manos' : 'Count the hands'}
             </p>
@@ -274,6 +289,7 @@ const Semaforo = ({ lang = 'es', grande = false }) => {
                 <button
                   key={n.id}
                   onClick={() => setConteo(c => sumar(c, n.id))}
+                  aria-label={`+1 · ${n.texto}`}
                   className="flex flex-col items-center gap-1 py-3 rounded-xl border border-slate-300 bg-white hover:border-slate-400 transition-colors touch-manipulation"
                 >
                   <span aria-hidden="true" className="w-5 h-5 rounded-full" style={{ background: LAMPARA[n.id] }} />
@@ -281,57 +297,41 @@ const Semaforo = ({ lang = 'es', grande = false }) => {
                 </button>
               ))}
             </div>
-
-            {/* Cuántas van, NO cómo van repartidas: el profesor necesita lo
-                primero para no perder la cuenta y lo segundo es justo lo que no
-                puede verse todavía. */}
             <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
-              <span className="text-sm text-slate-600 tabular-nums">
-                {r.total} {es ? (r.total === 1 ? 'mano contada' : 'manos contadas') : (r.total === 1 ? 'hand counted' : 'hands counted')}
-              </span>
+              <span className="text-sm text-slate-600 tabular-nums">{manos}</span>
               <button onClick={() => setConteo(VACIO)} disabled={!r.total} className={ENLACE}>
                 {es ? 'empezar la cuenta de nuevo' : 'start the count again'}
               </button>
             </div>
-
-            <button onClick={() => setFase('mostrar')} disabled={!r.total} className={`mt-3 ${ACCION}`}>
-              {es ? 'Mostrar el semáforo' : 'Show the traffic light'}
-            </button>
-            <button onClick={() => setFase('preparar')} className={`mt-2 w-full ${APAGADO}`}>
+            <button onClick={() => setFase('preparar')} className={`mt-4 w-full ${APAGADO}`}>
               {es ? 'Cambiar el objetivo' : 'Change the objective'}
             </button>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* ── MOSTRAR ───────────────────────────────────────────────────────── */}
-      {fase === 'mostrar' && (
-        <div className="space-y-4">
-          <Objetivo />
-          <div aria-live="polite">
-            <Carcasa encendido />
-            {/* La lectura en una frase, que es lo que se dice en voz alta. Con
-                empate no se canta ninguna: elegir por ellos sería inventar. */}
-            <p className={`text-center font-bold text-slate-900 mt-3 ${grande ? '' : 'text-base'}`}
-               style={{ fontSize: grande ? M.lectura : undefined }}>
-              {r.dominante
-                ? (es ? `El curso está en ${{ verde: 'verde', ambar: 'ámbar', rojo: 'rojo' }[r.dominante]}.`
-                      : `The class is on ${{ verde: 'green', ambar: 'amber', rojo: 'red' }[r.dominante]}.`)
-                : (es ? 'El curso está repartido.' : 'The class is split.')}
-            </p>
-          </div>
-
-          <div className={`flex flex-wrap gap-2 ${grande ? 'max-w-3xl mx-auto' : ''}`}>
-            <button onClick={empezar} className={`flex-1 ${APAGADO}`}>
+        {fase === 'mostrar' && (
+          <div className="grid grid-cols-2 gap-2">
+            <button onClick={empezar} className={APAGADO}>
               {es ? 'Contar otra vez' : 'Count again'}
             </button>
-            <button onClick={() => setFase('preparar')} className={`flex-1 ${APAGADO}`}>
+            <button onClick={() => setFase('preparar')} className={APAGADO}>
               {es ? 'Otro objetivo' : 'Another objective'}
             </button>
           </div>
-        </div>
+        )}
+      </Panel>
+
+      {fase === 'preparar' && (
+        <Accion onClick={empezar} disabled={!frase}>
+          {es ? 'Proyectar' : 'Project it'}
+        </Accion>
       )}
-    </section>
+      {fase === 'contar' && (
+        <Accion onClick={() => setFase('mostrar')} disabled={!r.total}>
+          {es ? 'Mostrar el semáforo' : 'Show the traffic light'}
+        </Accion>
+      )}
+    </>
   );
 };
 

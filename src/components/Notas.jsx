@@ -26,6 +26,7 @@ import React, { useState } from 'react';
 import { ESCALA_CHILE, nota, tabla, puntajeParaAprobar, problemaEscala,
          formatoNota, formatoPuntaje, leerNumero } from '../notas';
 import { NUMERO, opcion, ENLACE } from '../ui';
+import { Panel, Escenario, Cabeza } from '../zonas';
 
 const APROBADA = 'text-blue-700';
 const REPROBADA = 'text-red-700';
@@ -44,7 +45,7 @@ const Campo = ({ rotulo, valor, onCambio, sufijo, ancho }) => (
   </label>
 );
 
-const Notas = ({ lang = 'es', grande = false }) => {
+const Notas = ({ lang = 'es' }) => {
   const es = lang === 'es';
   /* Como texto y no como número: así se puede escribir «12,» camino de «12,5»
      sin que el campo se corrija solo a mitad de la escritura. */
@@ -84,110 +85,125 @@ const Notas = ({ lang = 'es', grande = false }) => {
   };
 
   return (
-    <section className={grande ? 'w-full max-w-4xl mx-auto' : 'w-full max-w-xl mx-auto'}>
-      {!grande && (
-        <>
-          <h2 className="text-lg font-bold text-slate-900 mb-1">{es ? 'Notas' : 'Grades'}</h2>
-          <p className="text-sm text-muted mb-4">
-            {es ? 'Para corregir: el puntaje de cada prueba y su nota, o la tabla completa.'
-                : 'For marking: the grade for each score, or the whole table.'}
-          </p>
-        </>
-      )}
-
-      {/* ── LA PRUEBA ─────────────────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-end gap-x-5 gap-y-3">
-        <Campo rotulo={es ? 'Puntaje máximo' : 'Maximum score'} valor={maximoTxt} onCambio={setMaximoTxt} />
-        <Campo rotulo={es ? 'Exigencia' : 'Pass requirement'} valor={exigenciaTxt} onCambio={setExigenciaTxt} sufijo="%" />
-        <button onClick={() => setMedios(m => !m)} aria-pressed={medios} className={opcion(medios)}>
-          {es ? 'Medios puntos' : 'Half points'}
-        </button>
-      </div>
-
-      <details className="mt-3">
-        <summary className={`${ENLACE} cursor-pointer w-fit`}>
-          {es ? 'Escala' : 'Scale'}: {minTxt} – {maxTxt} · {es ? 'aprueba con' : 'pass'} {aprobTxt}
-        </summary>
-        <div className="mt-2 flex flex-wrap gap-x-5 gap-y-3">
-          <Campo rotulo={es ? 'Nota mínima' : 'Minimum grade'} valor={minTxt} onCambio={setMinTxt} />
-          <Campo rotulo={es ? 'Aprobación' : 'Pass grade'} valor={aprobTxt} onCambio={setAprobTxt} />
-          <Campo rotulo={es ? 'Nota máxima' : 'Maximum grade'} valor={maxTxt} onCambio={setMaxTxt} />
-        </div>
-      </details>
-
-      {problema && (
-        <p role="alert" className="mt-4 text-sm font-semibold text-red-700">{AVISOS[problema]}</p>
-      )}
-
-      {/* ── UNA PRUEBA ────────────────────────────────────────────────────── */}
-      {!problema && (
-        <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-3 border-y border-slate-200 py-4">
-          <Campo rotulo={es ? 'Puntaje obtenido' : 'Score'} valor={puntajeTxt} onCambio={setPuntajeTxt}
-                 ancho="w-24 px-3 py-2 border border-slate-300 rounded-lg text-xl font-bold focus:ring-2 focus:ring-indigo-500 outline-none" />
-          <div aria-live="polite" className="flex items-baseline gap-3">
-            <span className={`font-black tabular-nums leading-none ${laNota == null ? 'text-slate-400' : aprueba ? APROBADA : REPROBADA}`}
-                  style={{ fontSize: grande ? 'min(14vw, 24vh)' : '3.5rem' }}>
-              {formatoNota(laNota, lang)}
-            </span>
-            {laNota != null && (
-              <span className={`text-sm font-bold ${aprueba ? APROBADA : REPROBADA}`}>
-                {aprueba ? (es ? 'aprobada' : 'pass') : (es ? 'reprobada' : 'fail')}
+    <>
+      <Escenario>
+        {problema ? (
+          <p role="alert" className="text-center font-semibold text-red-700 max-w-sm">{AVISOS[problema]}</p>
+        ) : (
+          <div className="w-full max-h-full overflow-auto">
+            {/* ── UNA PRUEBA: la nota, grande. Es lo que se mira prueba a prueba. */}
+            <div aria-live="polite" className="flex items-baseline justify-center gap-4">
+              <span className={`font-black tabular-nums leading-none ${laNota == null ? 'text-slate-400' : aprueba ? APROBADA : REPROBADA}`}
+                    style={{ fontSize: 'max(3.5rem, min(12cqw, 22cqh))' }}>
+                {formatoNota(laNota, lang)}
               </span>
-            )}
-          </div>
-          {fueraDeRango && (
-            <p className="w-full text-xs text-slate-600">
-              {es ? `Fuera de 0 a ${formatoPuntaje(maximo, lang)}: se calcula con el extremo.`
-                  : `Outside 0 to ${formatoPuntaje(maximo, lang)}: the nearest end is used.`}
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* ── LA TABLA ──────────────────────────────────────────────────────── */}
-      {demasiadas && (
-        <p className="mt-4 text-sm text-slate-600">
-          {es ? 'Con ese máximo la tabla tendría demasiadas filas. ¿Está bien escrito?'
-              : 'With that maximum the table would be too long. Is it typed right?'}
-        </p>
-      )}
-      {filas.length > 0 && (
-        <div className="mt-5">
-          {corte != null && (
-            <p className="text-sm text-slate-700 mb-3">
-              {es ? 'Se aprueba desde ' : 'Pass from '}
-              <b className={APROBADA}>{formatoPuntaje(corte, lang)} {es ? 'puntos' : 'points'}</b>
-              {corte < escala.exigencia * maximo && (
-                <span className="text-slate-600">
-                  {es ? ` (el ${exigenciaTxt} % exacto son ${formatoPuntaje(Math.round(escala.exigencia * maximo * 100) / 100, lang)}; el redondeo a una decimal sube la nota al ${aprobTxt}).`
-                      : ` (exactly ${exigenciaTxt}% is ${formatoPuntaje(Math.round(escala.exigencia * maximo * 100) / 100, lang)}; rounding to one decimal brings it up to ${aprobTxt}).`}
+              {laNota != null && (
+                <span className={`font-bold ${aprueba ? APROBADA : REPROBADA}`} style={{ fontSize: 'max(0.9rem, min(2cqw, 3.6cqh))' }}>
+                  {aprueba ? (es ? 'aprobada' : 'pass') : (es ? 'reprobada' : 'fail')}
                 </span>
               )}
-            </p>
-          )}
-          {[
-            { id: 'rep', rotulo: es ? 'Reprobadas' : 'Fail', color: REPROBADA, filas: filas.filter(f => f.nota < escala.aprobacion) },
-            { id: 'apr', rotulo: es ? 'Aprobadas' : 'Pass', color: APROBADA, filas: filas.filter(f => f.nota >= escala.aprobacion) },
-          ].filter(z => z.filas.length).map(z => (
-            <div key={z.id} className="mb-4">
-              <h3 className={`text-xs font-bold uppercase tracking-wider mb-1 ${z.color}`}>{z.rotulo}</h3>
-              <ol className="grid grid-cols-3 sm:grid-cols-4 gap-x-4 text-sm tabular-nums">
-                {z.filas.map(f => {
-                  const actual = hayPuntaje && f.puntaje === puntaje;
-                  return (
-                    <li key={f.puntaje}
-                        className={`flex justify-between gap-2 px-2 py-0.5 rounded border-b border-slate-100 ${actual ? 'bg-indigo-50 ring-1 ring-indigo-300' : ''}`}>
-                      <span className="text-slate-600">{formatoPuntaje(f.puntaje, lang)}</span>
-                      <span className={`font-bold ${z.color}`}>{formatoNota(f.nota, lang)}</span>
-                    </li>
-                  );
-                })}
-              </ol>
             </div>
-          ))}
+            {laNota == null && (
+              <p className="mt-2 text-center text-sm text-muted">
+                {es ? 'Escribe el puntaje en el panel de la derecha.' : 'Type the score in the panel on the right.'}
+              </p>
+            )}
+            {fueraDeRango && (
+              <p className="mt-2 text-center text-xs text-slate-600">
+                {es ? `Fuera de 0 a ${formatoPuntaje(maximo, lang)}: se calcula con el extremo.`
+                    : `Outside 0 to ${formatoPuntaje(maximo, lang)}: the nearest end is used.`}
+              </p>
+            )}
+
+            {/* ── LA TABLA ──────────────────────────────────────────────────── */}
+            {demasiadas && (
+              <p className="mt-6 text-center text-sm text-slate-600">
+                {es ? 'Con ese máximo la tabla tendría demasiadas filas. ¿Está bien escrito?'
+                    : 'With that maximum the table would be too long. Is it typed right?'}
+              </p>
+            )}
+            {filas.length > 0 && (
+              <div className="mt-6 mx-auto max-w-5xl">
+                {corte != null && (
+                  <p className="text-sm text-slate-700 mb-3">
+                    {es ? 'Se aprueba desde ' : 'Pass from '}
+                    <b className={APROBADA}>{formatoPuntaje(corte, lang)} {es ? 'puntos' : 'points'}</b>
+                    {corte < escala.exigencia * maximo && (
+                      <span className="text-slate-600">
+                        {es ? ` (el ${exigenciaTxt} % exacto son ${formatoPuntaje(Math.round(escala.exigencia * maximo * 100) / 100, lang)}; el redondeo a una decimal sube la nota al ${aprobTxt}).`
+                            : ` (exactly ${exigenciaTxt}% is ${formatoPuntaje(Math.round(escala.exigencia * maximo * 100) / 100, lang)}; rounding to one decimal brings it up to ${aprobTxt}).`}
+                      </span>
+                    )}
+                  </p>
+                )}
+                {[
+                  { id: 'rep', rotulo: es ? 'Reprobadas' : 'Fail', color: REPROBADA, filas: filas.filter(f => f.nota < escala.aprobacion) },
+                  { id: 'apr', rotulo: es ? 'Aprobadas' : 'Pass', color: APROBADA, filas: filas.filter(f => f.nota >= escala.aprobacion) },
+                ].filter(z => z.filas.length).map(z => (
+                  <div key={z.id} className="mb-4">
+                    <h3 className={`text-xs font-bold uppercase tracking-wider mb-1 ${z.color}`}>{z.rotulo}</h3>
+                    {/* Tantas columnas como quepan: en PC la tabla entera se ve de
+                        una vez, que es lo que se deja abierto junto a la pila. */}
+                    <ol className="grid gap-x-4 text-sm tabular-nums"
+                        style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(6.5rem, 1fr))' }}>
+                      {z.filas.map(f => {
+                        const actual = hayPuntaje && f.puntaje === puntaje;
+                        return (
+                          <li key={f.puntaje}
+                              className={`flex justify-between gap-2 px-2 py-0.5 rounded border-b border-slate-100 ${actual ? 'bg-indigo-50 ring-1 ring-indigo-300' : ''}`}>
+                            <span className="text-slate-600">{formatoPuntaje(f.puntaje, lang)}</span>
+                            <span className={`font-bold ${z.color}`}>{formatoNota(f.nota, lang)}</span>
+                          </li>
+                        );
+                      })}
+                    </ol>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </Escenario>
+
+      <Panel>
+        <Cabeza titulo={es ? 'Notas' : 'Grades'}>
+          {es ? 'Para corregir: el puntaje de cada prueba y su nota, o la tabla completa.'
+              : 'For marking: the grade for each score, or the whole table.'}
+        </Cabeza>
+
+        {/* ── UNA PRUEBA: arriba, porque es lo que se escribe una y otra vez. */}
+        {!problema && (
+          <div className="mb-5 pb-5 border-b border-slate-200">
+            <Campo rotulo={es ? 'Puntaje obtenido' : 'Score'} valor={puntajeTxt} onCambio={setPuntajeTxt}
+                   ancho="w-28 px-3 py-2 border border-slate-300 rounded-lg text-xl font-bold focus:ring-2 focus:ring-indigo-500 outline-none" />
+          </div>
+        )}
+
+        {/* ── LA PRUEBA ─────────────────────────────────────────────────────── */}
+        <div className="flex flex-wrap items-end gap-x-5 gap-y-3">
+          <Campo rotulo={es ? 'Puntaje máximo' : 'Maximum score'} valor={maximoTxt} onCambio={setMaximoTxt} />
+          <Campo rotulo={es ? 'Exigencia' : 'Pass requirement'} valor={exigenciaTxt} onCambio={setExigenciaTxt} sufijo="%" />
         </div>
-      )}
-    </section>
+        <button onClick={() => setMedios(m => !m)} aria-pressed={medios} className={`mt-3 ${opcion(medios)}`}>
+          {es ? 'Medios puntos' : 'Half points'}
+        </button>
+
+        <details className="mt-4">
+          <summary className={`${ENLACE} cursor-pointer w-fit`}>
+            {es ? 'Escala' : 'Scale'}: {minTxt} – {maxTxt} · {es ? 'aprueba con' : 'pass'} {aprobTxt}
+          </summary>
+          <div className="mt-2 flex flex-wrap gap-x-5 gap-y-3">
+            <Campo rotulo={es ? 'Nota mínima' : 'Minimum grade'} valor={minTxt} onCambio={setMinTxt} />
+            <Campo rotulo={es ? 'Aprobación' : 'Pass grade'} valor={aprobTxt} onCambio={setAprobTxt} />
+            <Campo rotulo={es ? 'Nota máxima' : 'Maximum grade'} valor={maxTxt} onCambio={setMaxTxt} />
+          </div>
+        </details>
+
+        {problema && (
+          <p role="alert" className="mt-4 text-sm font-semibold text-red-700">{AVISOS[problema]}</p>
+        )}
+      </Panel>
+    </>
   );
 };
 

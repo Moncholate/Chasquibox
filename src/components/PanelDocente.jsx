@@ -11,8 +11,8 @@
      · MENÚ a la izquierda, con las herramientas por momento de la clase. Se
        pliega a íconos. Crece hacia abajo, que es como va a crecer el bundle.
      · ESCENARIO al centro, lo que mira el curso, y PANEL a la derecha, lo que
-       toca el docente (ver ../zonas.jsx). Las herramientas que aún no se
-       partieron en dos se ven como antes, en su columna.
+       toca el docente (ver ../zonas.jsx). Las doce herramientas están
+       partidas así; ninguna dibuja su propia columna.
      · PANTALLA COMPLETA deja solo el escenario, con la acción en una
        barra flotante. Espacio dispara la acción; Esc sale. No se llama
        «Proyectar»: El muro y el Semáforo ya tienen un paso con ese nombre, y
@@ -134,18 +134,16 @@ const PanelDocente = ({ lang = 'es', marca = null }) => {
   };
 
   /* POR MOMENTO DE LA CLASE, y en ese orden: primero lo de empezar y repartir,
-     después lo de cerrar, y aparte lo de DESPUÉS, con la pila de pruebas.
-     `dividida`: la herramienta ya usa escenario y panel (../zonas.jsx). Las que
-     no, se ven como antes mientras les llega el turno. */
+     después lo de cerrar, y aparte lo de DESPUÉS, con la pila de pruebas. */
   const GRUPOS = [
     {
       id: 'durante',
       rotulo: es ? 'Durante' : 'During',
       items: [
-        { id: 'dado', rotulo: es ? 'Dado' : 'Dice', Icono: Dices, dividida: true },
-        { id: 'ruleta', rotulo: es ? 'Ruleta' : 'Wheel', Icono: Disc3, dividida: true },
-        { id: 'grupos', rotulo: es ? 'Grupos' : 'Groups', Icono: Users, dividida: true },
-        { id: 'tiempo', rotulo: es ? 'Reloj' : 'Timer', Icono: Timer, dividida: true },
+        { id: 'dado', rotulo: es ? 'Dado' : 'Dice', Icono: Dices },
+        { id: 'ruleta', rotulo: es ? 'Ruleta' : 'Wheel', Icono: Disc3 },
+        { id: 'grupos', rotulo: es ? 'Grupos' : 'Groups', Icono: Users },
+        { id: 'tiempo', rotulo: es ? 'Reloj' : 'Timer', Icono: Timer },
         { id: 'sopa', rotulo: es ? 'Sopa de letras' : 'Word search', Icono: Grid3x3 },
         { id: 'crucigrama', rotulo: es ? 'Crucigrama' : 'Crossword', Icono: LayoutGrid },
       ],
@@ -169,16 +167,8 @@ const PanelDocente = ({ lang = 'es', marca = null }) => {
       ],
     },
   ];
-  const actual = GRUPOS.flatMap(g => g.items).find(h => h.id === vista);
-  const dividida = !!actual?.dividida;
-
   /* Cada herramienta con su contexto: activa o no, y si se está proyectando. */
   const zona = (id) => ({ destinos, activa: vista === id, proyectando });
-  const anterior = (id, nodo) => (
-    <div key={id} className={vista === id ? '' : 'hidden'}>
-      <ZonasCtx.Provider value={zona(id)}>{nodo}</ZonasCtx.Provider>
-    </div>
-  );
   const BotonProyectar = (
     <button onClick={proyectar}
       className="absolute top-3 right-3 z-10 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 transition-colors">
@@ -188,7 +178,7 @@ const PanelDocente = ({ lang = 'es', marca = null }) => {
   );
 
   return (
-    <div className="h-screen flex flex-col md:flex-row overflow-hidden bg-[#f5f6fb]">
+    <div className="gh-libre h-screen flex flex-col md:flex-row overflow-hidden bg-[#f5f6fb]">
 
       {/* ── EL MENÚ ─────────────────────────────────────────────────────── */}
       <aside className={`shrink-0 bg-white border-b md:border-b-0 md:border-r border-slate-200 flex flex-col ${plegado ? 'md:w-16' : 'md:w-56'}`}>
@@ -225,48 +215,39 @@ const PanelDocente = ({ lang = 'es', marca = null }) => {
 
       {/* ── EL ÁREA DE TRABAJO, que es lo que va a pantalla completa ──────── */}
       <div ref={caja}
-        className={`${proyectando ? 'fixed inset-0 z-50' : 'relative flex-1 min-w-0 min-h-0'} flex flex-col bg-[#f5f6fb]`}>
+        className={`gh-libre ${proyectando ? 'fixed inset-0 z-50' : 'relative flex-1 min-w-0 min-h-0'} flex flex-col bg-[#f5f6fb]`}>
 
-        {/* Escenario + panel. Siempre montado: si no, los portales de las
-            herramientas divididas no tendrían dónde caer. */}
-        <div className={dividida ? `flex-1 min-h-0 ${proyectando ? 'flex' : 'flex flex-col md:grid md:grid-cols-[minmax(0,1fr)_22rem] overflow-auto md:overflow-hidden'}` : 'hidden'}>
-          <section aria-label={es ? 'Escenario' : 'Stage'} className="relative flex-1 min-w-0 min-h-[60vh] md:min-h-0 flex">
+        {/* Escenario + panel: los destinos de los portales de las herramientas. */}
+        <div className={`gh-libre flex-1 min-h-0 ${proyectando ? 'flex' : 'flex flex-col md:grid md:grid-cols-[minmax(0,1fr)_22rem] overflow-auto md:overflow-hidden'}`}>
+          <section aria-label={es ? 'Escenario' : 'Stage'} className="gh-libre relative flex-1 min-w-0 min-h-[60vh] md:min-h-0 flex">
             <div ref={refs.escenario} style={{ containerType: 'size' }}
-              className="flex-1 min-w-0 flex flex-col items-center justify-center p-6 md:p-10" />
+              className="gh-libre flex-1 min-w-0 flex flex-col items-center justify-center p-6 md:p-10" />
             {!proyectando && BotonProyectar}
           </section>
           {!proyectando && (
             <aside aria-label={es ? 'Controles' : 'Controls'}
               className="bg-white border-t md:border-t-0 md:border-l border-slate-200 flex flex-col min-h-0">
               <div ref={refs.panel} className="flex-1 md:overflow-y-auto p-5" />
-              <div className="p-4 border-t border-slate-200">
-                <div ref={refs.accion} />
-                <p className="hidden md:block mt-2 text-center text-xs text-muted">
-                  {es ? 'Atajo:' : 'Shortcut:'} <kbd className="px-1.5 py-0.5 rounded border border-slate-300 font-sans font-semibold text-slate-700">{es ? 'Espacio' : 'Space'}</kbd>
-                </p>
-              </div>
+              {/* La acción, al pie. `empty:hidden`: en las fases sin acción la
+                  franja desaparece en vez de quedar como un pie vacío. */}
+              <div ref={refs.accion} className="p-4 border-t border-slate-200 empty:hidden" />
             </aside>
           )}
         </div>
 
-        {/* Las que todavía van en una columna, como venían de Grammar HUB. */}
-        <div className={dividida ? 'hidden' : `relative flex-1 min-h-0 overflow-auto px-5 py-6 ${proyectando ? 'flex flex-col justify-center' : ''}`}>
-          {!proyectando && BotonProyectar}
-          {anterior('sopa', <Sopa lang={lang} grande={proyectando} />)}
-          {anterior('crucigrama', <Crucigrama lang={lang} grande={proyectando} />)}
-          {anterior('muro', <Muro lang={lang} grande={proyectando} />)}
-          {anterior('semaforo', <Semaforo lang={lang} grande={proyectando} />)}
-          {anterior('apuesta', <Apuesta lang={lang} grande={proyectando} />)}
-          {anterior('duda', <Duda lang={lang} grande={proyectando} {...cursoCierre} />)}
-          {anterior('antes', <AntesAhora lang={lang} grande={proyectando} {...cursoCierre} />)}
-          {anterior('notas', <Notas lang={lang} grande={proyectando} />)}
-        </div>
-
-        {/* Las divididas no pintan aquí: pintan en sus zonas, por portal. */}
+        {/* Las herramientas no pintan aquí: pintan en sus zonas, por portal. */}
         <ZonasCtx.Provider value={zona('dado')}><Dado lang={lang} /></ZonasCtx.Provider>
         <ZonasCtx.Provider value={zona('ruleta')}><Ruleta lang={lang} /></ZonasCtx.Provider>
         <ZonasCtx.Provider value={zona('grupos')}><Grupos lang={lang} {...curso} /></ZonasCtx.Provider>
         <ZonasCtx.Provider value={zona('tiempo')}><Temporizador lang={lang} /></ZonasCtx.Provider>
+        <ZonasCtx.Provider value={zona('sopa')}><Sopa lang={lang} /></ZonasCtx.Provider>
+        <ZonasCtx.Provider value={zona('crucigrama')}><Crucigrama lang={lang} /></ZonasCtx.Provider>
+        <ZonasCtx.Provider value={zona('muro')}><Muro lang={lang} /></ZonasCtx.Provider>
+        <ZonasCtx.Provider value={zona('semaforo')}><Semaforo lang={lang} /></ZonasCtx.Provider>
+        <ZonasCtx.Provider value={zona('apuesta')}><Apuesta lang={lang} /></ZonasCtx.Provider>
+        <ZonasCtx.Provider value={zona('duda')}><Duda lang={lang} {...cursoCierre} /></ZonasCtx.Provider>
+        <ZonasCtx.Provider value={zona('antes')}><AntesAhora lang={lang} {...cursoCierre} /></ZonasCtx.Provider>
+        <ZonasCtx.Provider value={zona('notas')}><Notas lang={lang} /></ZonasCtx.Provider>
 
         {/* Proyectando: la acción y la salida, flotando abajo a la derecha. */}
         {proyectando && (

@@ -37,8 +37,11 @@ const enZona = (nombre) => function Zona({ children }) {
 export const Panel = enZona('panel');
 export const Escenario = enZona('escenario');
 
+/* Escribiendo, o dentro de una cuadrícula (la sopa): ahí Espacio elige la
+   casilla, y quitárselo rompería resolverla con el teclado. */
 const escribiendo = (el) =>
-  el && (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName));
+  el && (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName)
+    || !!el.closest?.('[role="grid"]'));
 
 /**
  * LA acción de la herramienta. Va al pie del panel, y al proyectar a la barra
@@ -64,13 +67,22 @@ export function Accion({ children, onClick, disabled = false }) {
 
   const destino = destinos[proyectando ? 'flotante' : 'accion'];
   if (!activa || !destino) return null;
-  return createPortal(
+  const boton = (
     <button onClick={onClick} disabled={disabled}
       className={proyectando ? `${ACCION} !w-auto px-8 shadow-lg` : ACCION}>
       {children}
-    </button>,
-    destino,
+    </button>
   );
+  /* El atajo se anuncia junto al botón y solo cuando HAY botón: en las fases
+     sin acción (el muro mientras se anota) prometería algo que no pasa. */
+  return createPortal(proyectando ? boton : (
+    <>
+      {boton}
+      <p className="hidden md:block mt-2 text-center text-xs text-muted">
+        Atajo: <kbd className="px-1.5 py-0.5 rounded border border-slate-300 font-sans font-semibold text-slate-700">Espacio</kbd>
+      </p>
+    </>
+  ), destino);
 }
 
 /** El título y la explicación de la herramienta, arriba del panel. */
