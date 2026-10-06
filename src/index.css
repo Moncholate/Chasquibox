@@ -243,3 +243,29 @@ button:disabled { cursor: not-allowed; }
    romper nada que hoy funcione. */
 :root[data-theme="dark"] .bg-white.text-indigo-600,
 :root[data-theme="dark"] .bg-white .text-indigo-600 { color: #c7d2fe !important; }   /* 2.81 → 11.85 */
+
+/* ── LA RUEDA DE LA RULETA, según la forma del escenario ─────────────────────
+   Con la rueda arriba y el cartel debajo, en pantalla completa mandaba el ALTO
+   y la rueda se quedaba en dos tercios de la pantalla: agrandarla más empujaba
+   el cartel contra los botones flotantes. Así que depende de la forma:
+     · escenario alto o cuadrado (PC, con menú y panel): rueda arriba, cartel
+       debajo, y la rueda llega al 80 % del alto;
+     · escenario apaisado (pantalla completa): rueda a la izquierda, casi todo
+       el alto, y el cartel a su derecha, donde un nombre largo se parte en
+       renglones en vez de salirse.
+   Es una consulta de CONTENEDOR (el escenario es `container-type: size`), no
+   de la ventana: lo que importa es el hueco que de verdad tiene la rueda. */
+.ruleta-escena {
+  --rueda: min(80cqh, 82cqw);
+  --cartel: min(4.4cqw, 7.5cqh);
+  display: flex; flex-direction: column; align-items: center;
+}
+.ruleta-cartel { margin-top: 2cqh; width: 100%; text-align: center; }
+@container (min-aspect-ratio: 3 / 2) {
+  .ruleta-escena {
+    --rueda: min(90cqh, 58cqw);
+    --cartel: min(3.6cqw, 9cqh);
+    flex-direction: row; justify-content: center; gap: 4cqw;
+  }
+  .ruleta-cartel { margin-top: 0; width: auto; max-width: 34cqw; text-align: left; }
+}

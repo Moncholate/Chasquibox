@@ -27,6 +27,11 @@ import { Panel, Escenario, Accion, Cabeza } from '../zonas';
 
 const TINTES = ['#e0e7ff', '#c7d2fe'];   // indigo-100 / indigo-200: la rueda no compite con el resultado
 const GIRO_MS = 3000;
+/* El lado de la rueda lo pone index.css (.ruleta-escena, variable --rueda),
+   según la FORMA del escenario: alto, la rueda arriba y el cartel debajo;
+   apaisado (pantalla completa), la rueda a la izquierda ocupando casi todo el
+   alto y el cartel a su derecha. El puntero crece con ella. */
+const RUEDA = 'var(--rueda)';
 
 const reducirMovimiento = () =>
   typeof window !== 'undefined' && window.matchMedia
@@ -127,20 +132,24 @@ const Ruleta = ({ lang = 'es' }) => {
                 : 'Type the list in the panel on the right and the wheel shows up here.'}
           </p>
         ) : (
-          <div className="flex flex-col items-center w-full">
+          <div className="ruleta-escena w-full">
             {/* El puntero, arriba. La rueda gira debajo de él. */}
             <div className="relative">
               <div
                 aria-hidden="true"
                 className="absolute left-1/2 -translate-x-1/2 -top-1 w-0 h-0 z-10"
-                style={{ borderLeft: '12px solid transparent', borderRight: '12px solid transparent', borderTop: '22px solid #4338ca' }}
+                style={{
+                  borderLeft: `calc(${RUEDA} * 0.03) solid transparent`,
+                  borderRight: `calc(${RUEDA} * 0.03) solid transparent`,
+                  borderTop: `calc(${RUEDA} * 0.055) solid #4338ca`,
+                }}
               />
               <svg
                 viewBox="0 0 200 200"
                 role="img"
                 aria-label={es ? `Ruleta con ${items.length} tarjetas` : `Wheel with ${items.length} cards`}
                 style={{
-                  width: 'min(60cqh, 56cqw)', height: 'min(60cqh, 56cqw)',
+                  width: RUEDA, height: RUEDA,
                   transform: `rotate(${rotacion}deg)`,
                   transition: girando ? `transform ${GIRO_MS}ms cubic-bezier(.15,.9,.2,1)` : 'none',
                 }}
@@ -189,11 +198,11 @@ const Ruleta = ({ lang = 'es' }) => {
             </div>
 
             {/* El resultado, que es lo que de verdad se lee. */}
-            <div aria-live="polite" className="mt-[3cqh] text-center w-full">
+            <div aria-live="polite" className="ruleta-cartel">
               {elegido == null ? (
                 <p className="text-muted">{girando ? '…' : (es ? 'Gira la rueda' : 'Spin the wheel')}</p>
               ) : (
-                <p className="font-bold text-slate-900 leading-tight" style={{ fontSize: 'min(5cqw, 9cqh)' }}>
+                <p className="font-bold text-slate-900 leading-tight" style={{ fontSize: 'var(--cartel)' }}>
                   {/* El número delante para poder casar el cartel con el sector en
                       el que se paró la rueda, que es lo que la clase mira. */}
                   <span className="text-muted tabular-nums mr-2">{elegido + 1}</span>
