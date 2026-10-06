@@ -37,7 +37,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FORM_SIGNS, FORM_ORDER } from '../forms.generated.jsx';
 import { tiemposHasta, nombreDeCurso, CURSOS_DE_INGLES } from '../tiempos';
-import { ACCION, opcion, NUMERO } from '../ui';
+import { opcion, NUMERO } from '../ui';
+import { Panel, Escenario, Accion, Cabeza } from '../zonas';
 
 const SUJETOS = ['I', 'you', 'he', 'she', 'it', 'we', 'they'];
 
@@ -47,11 +48,8 @@ const reducirMovimiento = () =>
     ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
     : false;
 
-/* `grande` = proyectando. Crece SOLO el resultado: el número se lee desde el
-   fondo de la sala y los controles se quedan como están, que es lo que hace que
-   quepan todos arriba. Las medidas van en `vw` para que se ajusten al proyector
-   —1024 o 1920 de ancho— en vez de a un tamaño fijo. */
-const Dado = ({ lang = 'es', grande = false }) => {
+/* El resultado va al escenario y los controles al panel (../zonas.jsx). */
+const Dado = ({ lang = 'es' }) => {
   const es = lang === 'es';
   /* Como todo aquí, no se guarda: se elige en la clase y vive con la pestaña. */
   const [nivel, setNivel] = useState(null);
@@ -110,55 +108,91 @@ const Dado = ({ lang = 'es', grande = false }) => {
     { k: 'tiempo', nombre: es ? 'Tiempo' : 'Tense' },
   ];
 
+  /* Los tamaños van contra el ESCENARIO (cqw/cqh): crece el resultado, y solo
+     él, tanto en el PC como proyectado. El número manda; el resto acompaña. */
+  const talla = { numero: 'min(26cqw, 48cqh)', sujeto: 'min(11cqw, 20cqh)', resto: 'min(7cqw, 13cqh)' };
+
   return (
-    <section className="w-full max-w-xl mx-auto">
-      <h2 className="text-lg font-bold text-slate-900 mb-1">{es ? 'Dado' : 'Dice'}</h2>
-      <p className="text-sm text-muted mb-4">
-        {es ? 'Para sortear en clase.'
-            : 'For classroom draws.'}
-        {activos.tiempo && (
-          <>
-            {' '}
-            {nivel
-              ? (es ? `Los tiempos son los de ${nombreDeCurso(nivel, lang)}: ${tiempos.length}.`
-                    : `Tenses are the ones from ${nombreDeCurso(nivel, lang)}: ${tiempos.length}.`)
-              : (es ? `Sin curso elegido salen los ${tiempos.length}.`
-                    : `With no course selected, all ${tiempos.length} are in.`)}
-          </>
-        )}
-      </p>
+    <>
+      {/* El resultado, grande. `aria-live` para que un lector de pantalla lo
+          cante; `polite` y no `assertive` porque no interrumpe nada. */}
+      <Escenario>
+        <div aria-live="polite"
+          className={`text-center transition-transform ${tirando ? 'scale-[0.98]' : 'scale-100'}`}>
+          {!resultado ? (
+            <p className="text-muted">{es ? 'Lanza el dado' : 'Roll the dice'}</p>
+          ) : (
+            <div className="flex flex-wrap items-center justify-center gap-x-[4cqw] gap-y-[2cqh]">
+              {activos.numero && (
+                <span className="font-extrabold text-slate-900 tabular-nums leading-none" style={{ fontSize: talla.numero }}>{resultado.numero}</span>
+              )}
+              {activos.sujeto && (
+                <span className="font-bold text-blue-600 leading-none" style={{ fontSize: talla.sujeto }}>{resultado.sujeto}</span>
+              )}
+              {activos.forma && (
+                <span className="font-bold text-slate-700 leading-none" style={{ fontSize: talla.resto }}>
+                  <span className="font-mono mr-1.5">{signoForma(resultado.forma)}</span>
+                  {etiquetaForma(resultado.forma)}
+                </span>
+              )}
+              {activos.tiempo && resultado.tiempo && (
+                <span className="font-bold text-indigo-700 leading-none" style={{ fontSize: talla.resto }}>
+                  {es ? resultado.tiempo.es : resultado.tiempo.en}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+      </Escenario>
 
-      {/* Qué se tira */}
-      <div className="flex flex-wrap items-center gap-2 mb-3">
-        {DADOS.map(d => (
-          <button
-            key={d.k}
-            onClick={() => alternar(d.k)}
-            aria-pressed={activos[d.k]}
-            className={opcion(activos[d.k])}
-          >
-            {d.nombre}
-          </button>
-        ))}
+      <Panel>
+        <Cabeza titulo={es ? 'Dado' : 'Dice'}>
+          {es ? 'Para sortear en clase.' : 'For classroom draws.'}
+          {activos.tiempo && (
+            <>
+              {' '}
+              {nivel
+                ? (es ? `Los tiempos son los de ${nombreDeCurso(nivel, lang)}: ${tiempos.length}.`
+                      : `Tenses are the ones from ${nombreDeCurso(nivel, lang)}: ${tiempos.length}.`)
+                : (es ? `Sin curso elegido salen los ${tiempos.length}.`
+                      : `With no course selected, all ${tiempos.length} are in.`)}
+            </>
+          )}
+        </Cabeza>
 
-        <span className="text-[10px] font-bold uppercase tracking-wider text-muted ml-1">{es ? 'Inglés' : 'English'}</span>
-        {DADOS_INGLES.map(d => (
-          <button
-            key={d.k}
-            onClick={() => alternar(d.k)}
-            aria-pressed={activos[d.k]}
-            className={opcion(activos[d.k])}
-          >
-            {d.nombre}
-          </button>
-        ))}
+        {/* Qué se tira */}
+        <div className="flex flex-wrap items-center gap-2 mb-3">
+          {DADOS.map(d => (
+            <button key={d.k} onClick={() => alternar(d.k)} aria-pressed={activos[d.k]} className={opcion(activos[d.k])}>
+              {d.nombre}
+            </button>
+          ))}
+          {activos.numero && (
+            <label className="flex items-center gap-1.5 text-sm text-slate-600">
+              <span>{es ? 'caras' : 'faces'}</span>
+              <input
+                type="number" min="2" max="999" value={caras}
+                onChange={(e) => setCaras(Math.max(2, Math.min(999, Number(e.target.value) || 2)))}
+                className={NUMERO}
+              />
+            </label>
+          )}
+        </div>
 
+        <p className="text-[10px] font-bold uppercase tracking-wider text-muted mb-1.5">{es ? 'Inglés' : 'English'}</p>
+        <div className="flex flex-wrap items-center gap-2 mb-3">
+          {DADOS_INGLES.map(d => (
+            <button key={d.k} onClick={() => alternar(d.k)} aria-pressed={activos[d.k]} className={opcion(activos[d.k])}>
+              {d.nombre}
+            </button>
+          ))}
+        </div>
         {activos.tiempo && (
           <select
             value={nivel || ''}
             onChange={(e) => setNivel(e.target.value || null)}
             aria-label={es ? 'Curso' : 'Course'}
-            className="px-2 py-1.5 border border-slate-300 rounded-lg text-sm bg-white text-slate-700"
+            className="w-full mb-3 px-2 py-1.5 border border-slate-300 rounded-lg text-sm bg-white text-slate-700"
           >
             <option value="">{es ? 'Todos los cursos' : 'All courses'}</option>
             {CURSOS_DE_INGLES.map(c => (
@@ -167,71 +201,24 @@ const Dado = ({ lang = 'es', grande = false }) => {
           </select>
         )}
 
-        {activos.numero && (
-          <label className="flex items-center gap-1.5 text-sm text-slate-600">
-            <span>{es ? 'caras' : 'faces'}</span>
-            <input
-              type="number" min="2" max="999" value={caras}
-              onChange={(e) => setCaras(Math.max(2, Math.min(999, Number(e.target.value) || 2)))}
-              className={NUMERO}
-            />
-          </label>
-        )}
-      </div>
-
-      {/* El resultado, grande. `aria-live` para que un lector de pantalla lo
-          cante; `polite` y no `assertive` porque no interrumpe nada. */}
-      <div
-        aria-live="polite"
-        className={`rounded-2xl border border-slate-200 bg-white text-center transition-transform ${
-          grande ? 'px-6 py-10' : 'px-6 py-8'
-        } ${tirando ? 'scale-[0.98]' : 'scale-100'}`}
-      >
-        {!resultado ? (
-          <p className="text-muted text-sm">{es ? 'Toca Lanzar' : 'Tap Roll'}</p>
-        ) : (
-          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
-            {activos.numero && (
-              <span className={`font-extrabold text-slate-900 tabular-nums ${grande ? 'text-[16vw] leading-none' : 'text-6xl'}`}>{resultado.numero}</span>
-            )}
-            {activos.sujeto && (
-              <span className={`font-bold text-blue-600 ${grande ? 'text-[9vw] leading-none' : 'text-4xl'}`}>{resultado.sujeto}</span>
-            )}
-            {activos.forma && (
-              <span className={`font-bold text-slate-700 ${grande ? 'text-[7vw] leading-none' : 'text-3xl'}`}>
-                <span className="font-mono mr-1.5">{signoForma(resultado.forma)}</span>
-                {etiquetaForma(resultado.forma)}
-              </span>
-            )}
-            {activos.tiempo && resultado.tiempo && (
-              <span className={`font-bold text-indigo-700 ${grande ? 'text-[7vw] leading-none' : 'text-3xl'}`}>
-                {es ? resultado.tiempo.es : resultado.tiempo.en}
-              </span>
-            )}
+        {historial.length > 1 && (
+          <div className="mt-4">
+            <p className="text-xs font-semibold text-slate-600 mb-1.5">{es ? 'Últimas tiradas' : 'Last rolls'}</p>
+            <ul className="space-y-1">
+              {historial.slice(1).map((h, i) => (
+                <li key={i} className="text-sm bg-slate-100 text-slate-700 rounded px-2 py-1">
+                  {[activos.numero && h.numero, activos.sujeto && h.sujeto,
+                    activos.forma && etiquetaForma(h.forma),
+                    activos.tiempo && h.tiempo && (es ? h.tiempo.es : h.tiempo.en)].filter(Boolean).join(' · ')}
+                </li>
+              ))}
+            </ul>
           </div>
         )}
-      </div>
+      </Panel>
 
-      <button
-        onClick={lanzar}
-        className={`mt-3 ${ACCION}`}
-      >
-        {es ? 'Lanzar' : 'Roll'}
-      </button>
-
-      {historial.length > 1 && (
-        <p className="mt-3 text-xs text-muted flex flex-wrap items-center gap-1.5">
-          <span>{es ? 'Últimas:' : 'Last:'}</span>
-          {historial.slice(1).map((h, i) => (
-            <span key={i} className="inline-block bg-slate-100 text-slate-700 rounded px-1.5 py-0.5">
-              {[activos.numero && h.numero, activos.sujeto && h.sujeto,
-                activos.forma && etiquetaForma(h.forma),
-                activos.tiempo && h.tiempo && (es ? h.tiempo.es : h.tiempo.en)].filter(Boolean).join(' · ')}
-            </span>
-          ))}
-        </p>
-      )}
-    </section>
+      <Accion onClick={lanzar}>{es ? 'Lanzar' : 'Roll'}</Accion>
+    </>
   );
 };
 

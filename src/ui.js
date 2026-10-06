@@ -10,9 +10,9 @@
 
      ACCIÓN     una por herramienta y solo una: Lanzar, Girar, Repartir,
                 Empezar. Sólida, ancha y alta. Es la que se toca sin mirar.
-     PESTAÑA    qué herramienta se ve. Van dentro de una cápsula gris —el mismo
-                objeto que el conmutador ES/EN de la suite—, así que se leen
-                como «una de estas cuatro» y no como cuatro botones sueltos.
+     MENÚ       qué herramienta se ve. Vive en el menú lateral
+                (PanelDocente.jsx); hasta el 6-oct-2026 eran pestañas en una
+                cápsula gris arriba, heredadas de Grammar HUB.
      OPCIÓN     lo que se enciende y se apaga dentro de una herramienta (las
                 caras del dado, el modo de reparto, los minutos). Encendida va
                 en TINTE índigo, no en índigo sólido: el sólido es de la acción,
@@ -34,17 +34,6 @@ export const ACCION =
   'w-full py-3.5 rounded-xl font-bold text-base bg-indigo-600 hover:bg-indigo-700 ' +
   'active:bg-indigo-800 disabled:bg-slate-300 disabled:text-slate-600 text-white ' +
   'shadow-sm hover:shadow transition-all touch-manipulation';
-
-/** La cápsula que envuelve a las pestañas. */
-/* `flex-wrap`: la cápsula nunca puede empujar la página a lo ancho. Lo que
-   manda no es el ancho de la pantalla sino CUÁNTOS controles hay y cuánto mide
-   cada rótulo traducido — y eso cambia solo. */
-export const CAPSULA = 'inline-flex flex-wrap bg-slate-100 border border-slate-200 rounded-xl p-1 gap-0.5 max-w-full';
-
-/** Una pestaña dentro de la cápsula. */
-export const pestana = (activa) =>
-  'px-3 py-1.5 rounded-lg text-sm font-bold transition-all touch-manipulation ' +
-  (activa ? 'bg-white shadow-sm text-indigo-700' : 'text-slate-600 hover:text-slate-900');
 
 /** Una opción que se enciende y se apaga. */
 export const opcion = (activa) =>

@@ -1,40 +1,42 @@
 /* ============================================================================
    HERRAMIENTAS DE CLASE
    ----------------------------------------------------------------------------
-   Para quien enseña, de pie frente al curso: se usa en cinco segundos, a veces
-   proyectado. Nació como una vista de Grammar HUB y se mudó a Teacher's Utility Belt el
-   5-oct-2026, porque sirve a docentes de cualquier asignatura y no solo de
-   inglés.
+   Para quien enseña desde el PC de la sala, a veces proyectado. Nació como una
+   vista de Grammar HUB y se mudó a Teacher's Utility Belt el 5-oct-2026, porque
+   sirve a docentes de cualquier asignatura y no solo de inglés.
 
-   POR QUÉ PESTAÑAS Y NO UNA LISTA. Con cuatro herramientas apiladas volvería a
-   pasar lo de la Guía: para llegar a la última hay que barrer tres. Cada una
-   ocupa la pantalla cuando le toca.
+   LA PANTALLA ES DE PC (6-oct-2026). Heredó de Grammar HUB un diseño de
+   celular: pestañas arriba y una columna de 580 px al centro, con controles y
+   resultado apilados. Ahora:
+     · MENÚ a la izquierda, con las herramientas por momento de la clase. Se
+       pliega a íconos. Crece hacia abajo, que es como va a crecer el bundle.
+     · ESCENARIO al centro, lo que mira el curso, y PANEL a la derecha, lo que
+       toca el docente (ver ../zonas.jsx). Las herramientas que aún no se
+       partieron en dos se ven como antes, en su columna.
+     · PANTALLA COMPLETA deja solo el escenario, con la acción en una
+       barra flotante. Espacio dispara la acción; Esc sale. No se llama
+       «Proyectar»: El muro y el Semáforo ya tienen un paso con ese nombre, y
+       con dos botones iguales en pantalla se tocaba el equivocado.
 
-   Y se montan TODAS aunque solo se vea una —se ocultan con CSS, no se
-   desmontan—: si el temporizador se desmontara al cambiar de pestaña, la cuenta
-   se perdería justo cuando el profesor va a sortear algo mientras corre el
-   tiempo. Ese es el caso normal, no el raro.
+   Y se montan TODAS aunque solo se vea una: si el temporizador se desmontara al
+   cambiar de herramienta, la cuenta se perdería justo cuando el profesor va a
+   sortear algo mientras corre el tiempo. Ese es el caso normal, no el raro.
 
-   PANTALLA COMPLETA, para proyectar. Se pide sobre el contenedor de las
-   herramientas y no sobre la página entera: así la cabecera de la app se queda
-   fuera sola, sin tener que esconderla a mano.
-
-   Dos cosas que no son obvias:
-     · el navegador puede negarla —iPhone no la da nunca fuera de un vídeo—, así
-       que si falla se queda el modo «a lo ancho» (fijo sobre la página), que es
-       casi todo lo que se gana y no depende de nadie.
-     · las herramientas reciben `grande` y deciden ELLAS qué crece: el resultado,
-       no los controles. Un dado con el número gigante y los botones normales es
-       lo que se ve desde el fondo de la sala; escalarlo todo por igual deja los
-       controles ocupando media pantalla.
+   PANTALLA COMPLETA. Se pide sobre el área de trabajo y no sobre la página, así
+   el menú se queda fuera solo. El navegador puede negarla —iPhone no la da
+   fuera de un vídeo—, y entonces queda el modo «a lo ancho» (fijo sobre la
+   página), que es casi todo lo que se gana.
 
    NADA SE GUARDA. Es la regla de esta sección, dicha por el profesor para el
    generador de grupos y aplicada a todo: lo que se escribe aquí vive mientras
    la pestaña está abierta. Así no hay nombres de alumnos en ningún repositorio
    ni en ningún despliegue, y no hay nada que explicar sobre qué queda guardado.
    ========================================================================== */
-import React, { useState, useRef, useEffect } from 'react';
-import { Maximize2, Minimize2 } from 'lucide-react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import {
+  Dices, Disc3, Users, Timer, Grid3x3, LayoutGrid, BrickWall, TrafficCone, Coins,
+  CircleHelp, ArrowLeftRight, Calculator, PanelLeftClose, PanelLeftOpen, Maximize2, X,
+} from 'lucide-react';
 import Dado from './Dado';
 import Ruleta from './Ruleta';
 import Grupos from './Grupos';
@@ -47,12 +49,15 @@ import Apuesta from './Apuesta';
 import AntesAhora from './AntesAhora';
 import Muro from './Muro';
 import Notas from './Notas';
-import { CAPSULA, pestana } from '../ui';
+import { ZonasCtx } from '../zonas';
 import { cargaDesdeHistorico } from '../listaCurso';
 
-const PanelDocente = ({ lang = 'es' }) => {
+const ZONAS = ['panel', 'escenario', 'accion', 'flotante'];
+
+const PanelDocente = ({ lang = 'es', marca = null }) => {
   const es = lang === 'es';
   const [vista, setVista] = useState('dado');
+  const [plegado, setPlegado] = useState(false);
   /* LA LISTA DEL CURSO VIVE AQUÍ, y no dentro de la herramienta que la pide.
      Vivía en Grupos, que es donde se pega y parecía lo lógico, hasta que
      apareció la segunda que la necesita: «La duda» del cierre. Con un cierre de
@@ -91,19 +96,25 @@ const PanelDocente = ({ lang = 'es' }) => {
     const c = cargaDesdeHistorico(origen.texto, { fecha });
     if (!c.error) cargarCurso(c);
   };
-  const [presentando, setPresentando] = useState(false);
+  const curso = { nombres, ausentes, origen, onCargar: cargarCurso, onAlternar: alternarAusente, onCambiarLista: cambiarLista, onCambiarFecha: cambiarFecha };
+  const cursoCierre = { curso: presentes, origen, onCargar: cargarCurso, onCambiarLista: cambiarLista, onCambiarFecha: cambiarFecha };
+
+  /* Los destinos de las zonas: los nodos donde cada herramienta pinta lo suyo. */
+  const [destinos, setDestinos] = useState({});
+  const refs = useMemo(() => Object.fromEntries(ZONAS.map(k =>
+    [k, (el) => setDestinos(d => (d[k] === el ? d : { ...d, [k]: el }))])), []);
+
+  const [proyectando, setProyectando] = useState(false);
   const caja = useRef(null);
 
   /* El estado lo manda el navegador, no el botón: si el profesor sale con Esc
      —que es como se sale— la pantalla volvería a su sitio pero el botón seguiría
      diciendo «salir». */
   useEffect(() => {
-    /* Solo interesa SALIR: entrar lo hace el botón. Y hay que escucharlo porque
-       de la pantalla completa se sale con Esc, no con el botón. */
-    const alSalir = () => { if (!document.fullscreenElement) setPresentando(false); };
+    const alSalir = () => { if (!document.fullscreenElement) setProyectando(false); };
     /* Esc también cierra el modo «a lo ancho» cuando el navegador negó la
-       pantalla completa (iPhone): ahí no hay evento de fullscreen que escuchar. */
-    const alTeclear = (e) => { if (e.key === 'Escape' && !document.fullscreenElement) setPresentando(false); };
+       pantalla completa: ahí no hay evento de fullscreen que escuchar. */
+    const alTeclear = (e) => { if (e.key === 'Escape' && !document.fullscreenElement) setProyectando(false); };
     document.addEventListener('fullscreenchange', alSalir);
     document.addEventListener('keydown', alTeclear);
     return () => {
@@ -112,126 +123,162 @@ const PanelDocente = ({ lang = 'es' }) => {
     };
   }, []);
 
-  const alternarPantalla = async () => {
-    if (presentando) {
-      try { if (document.fullscreenElement) await document.exitFullscreen(); } catch { /* ya estaba fuera */ }
-      setPresentando(false);
-      return;
-    }
-    setPresentando(true);
+  const proyectar = async () => {
+    setProyectando(true);
     try { await caja.current?.requestFullscreen?.(); }
     catch { /* sin API o denegada: queda el modo a lo ancho, que ya sirve */ }
   };
+  const salir = async () => {
+    try { if (document.fullscreenElement) await document.exitFullscreen(); } catch { /* ya estaba fuera */ }
+    setProyectando(false);
+  };
 
-  /* DOS GRUPOS Y NO UNA LISTA DE SIETE. Con las de cierre la cápsula se parte en
-     dos filas, y dos filas de botones iguales vuelven a ser la lista que las
-     pestañas evitaban. Rotuladas, el corte deja de ser un accidente del ancho y
-     pasa a decir algo: para qué momento de la clase es cada cosa.
-     Y el orden de los grupos es el de la clase: primero lo de empezar y
-     repartir, después lo de cerrar. */
+  /* POR MOMENTO DE LA CLASE, y en ese orden: primero lo de empezar y repartir,
+     después lo de cerrar, y aparte lo de DESPUÉS, con la pila de pruebas.
+     `dividida`: la herramienta ya usa escenario y panel (../zonas.jsx). Las que
+     no, se ven como antes mientras les llega el turno. */
   const GRUPOS = [
     {
       id: 'durante',
       rotulo: es ? 'Durante' : 'During',
       items: [
-        { id: 'dado', rotulo: es ? 'Dado' : 'Dice' },
-        { id: 'ruleta', rotulo: es ? 'Ruleta' : 'Wheel' },
-        { id: 'grupos', rotulo: es ? 'Grupos' : 'Groups' },
-        /* «Reloj» y no «Temporizador»: con la palabra larga la cápsula medía
-           347px y se salía de una pantalla de 360. La herramienta se sigue
-           titulando «Temporizador» dentro; esto es solo la pestaña. */
-        { id: 'tiempo', rotulo: es ? 'Reloj' : 'Timer' },
-        { id: 'sopa', rotulo: es ? 'Sopa de letras' : 'Word search' },
-        { id: 'crucigrama', rotulo: es ? 'Crucigrama' : 'Crossword' },
+        { id: 'dado', rotulo: es ? 'Dado' : 'Dice', Icono: Dices, dividida: true },
+        { id: 'ruleta', rotulo: es ? 'Ruleta' : 'Wheel', Icono: Disc3, dividida: true },
+        { id: 'grupos', rotulo: es ? 'Grupos' : 'Groups', Icono: Users, dividida: true },
+        { id: 'tiempo', rotulo: es ? 'Reloj' : 'Timer', Icono: Timer, dividida: true },
+        { id: 'sopa', rotulo: es ? 'Sopa de letras' : 'Word search', Icono: Grid3x3 },
+        { id: 'crucigrama', rotulo: es ? 'Crucigrama' : 'Crossword', Icono: LayoutGrid },
       ],
     },
     {
       id: 'cierre',
       rotulo: es ? 'Cierre' : 'Closing',
       items: [
-        { id: 'muro', rotulo: es ? 'El muro' : 'The wall' },
-        { id: 'semaforo', rotulo: es ? 'Semáforo' : 'Traffic light' },
-        { id: 'apuesta', rotulo: es ? 'Apuesta' : 'The bet' },
-        { id: 'duda', rotulo: es ? 'La duda' : 'The doubt' },
-        { id: 'antes', rotulo: es ? 'Antes / Ahora' : 'Then / Now' },
+        { id: 'muro', rotulo: es ? 'El muro' : 'The wall', Icono: BrickWall },
+        { id: 'semaforo', rotulo: es ? 'Semáforo' : 'Traffic light', Icono: TrafficCone },
+        { id: 'apuesta', rotulo: es ? 'Apuesta' : 'The bet', Icono: Coins },
+        { id: 'duda', rotulo: es ? 'La duda' : 'The doubt', Icono: CircleHelp },
+        { id: 'antes', rotulo: es ? 'Antes / Ahora' : 'Then / Now', Icono: ArrowLeftRight },
       ],
     },
-    /* El tercer momento no es de la clase: es DESPUÉS, con la pila de pruebas.
-       Va último por eso, y aparte para que no se lea como una actividad más. */
     {
       id: 'corregir',
       rotulo: es ? 'Corregir' : 'Marking',
       items: [
-        { id: 'notas', rotulo: es ? 'Notas' : 'Grades' },
+        { id: 'notas', rotulo: es ? 'Notas' : 'Grades', Icono: Calculator },
       ],
     },
   ];
+  const actual = GRUPOS.flatMap(g => g.items).find(h => h.id === vista);
+  const dividida = !!actual?.dividida;
+
+  /* Cada herramienta con su contexto: activa o no, y si se está proyectando. */
+  const zona = (id) => ({ destinos, activa: vista === id, proyectando });
+  const anterior = (id, nodo) => (
+    <div key={id} className={vista === id ? '' : 'hidden'}>
+      <ZonasCtx.Provider value={zona(id)}>{nodo}</ZonasCtx.Provider>
+    </div>
+  );
+  const BotonProyectar = (
+    <button onClick={proyectar}
+      className="absolute top-3 right-3 z-10 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 transition-colors">
+      <Maximize2 size={15} aria-hidden="true" />
+      {es ? 'Pantalla completa' : 'Full screen'}
+    </button>
+  );
 
   return (
-    <div className="w-full min-h-full flex flex-col">
+    <div className="h-screen flex flex-col md:flex-row overflow-hidden bg-[#f5f6fb]">
 
-      <div ref={caja} className={presentando ? 'fixed inset-0 z-50 bg-white overflow-auto flex flex-col' : 'contents'}>
-      <div className="px-4 pt-3 flex flex-wrap items-end gap-x-4 gap-y-2">
-        {/* Cada grupo en su cápsula: así se leen como «una de estas» y no como
-            siete botones sueltos con el mismo peso que todo lo demás. */}
-        {GRUPOS.map(g => (
-          <div key={g.id} className="flex flex-col gap-1">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-muted">{g.rotulo}</span>
-            <div className={CAPSULA} role="tablist" aria-label={g.rotulo}>
+      {/* ── EL MENÚ ─────────────────────────────────────────────────────── */}
+      <aside className={`shrink-0 bg-white border-b md:border-b-0 md:border-r border-slate-200 flex flex-col ${plegado ? 'md:w-16' : 'md:w-56'}`}>
+        {marca && marca({ plegado })}
+        <nav aria-label={es ? 'Herramientas' : 'Tools'}
+          className="flex md:flex-col gap-3 md:gap-4 px-2 pb-2 md:pb-4 md:pt-1 overflow-x-auto md:overflow-x-visible md:overflow-y-auto md:flex-1">
+          {GRUPOS.map(g => (
+            <div key={g.id} className="flex md:flex-col gap-0.5 shrink-0">
+              <span className={`hidden ${plegado ? '' : 'md:block'} px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted`}>{g.rotulo}</span>
               {g.items.map(h => (
                 <button
                   key={h.id}
                   onClick={() => setVista(h.id)}
                   aria-pressed={vista === h.id}
-                  className={pestana(vista === h.id)}
+                  title={plegado ? h.rotulo : undefined}
+                  className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors ${
+                    plegado ? 'md:justify-center md:px-0' : ''} ${
+                    vista === h.id ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}
                 >
-                  {h.rotulo}
+                  <h.Icono size={18} aria-hidden="true" className="shrink-0" />
+                  <span className={plegado ? 'md:sr-only' : ''}>{h.rotulo}</span>
                 </button>
               ))}
             </div>
-          </div>
-        ))}
-
-        {/* LA TABLA DE TIEMPOS YA NO ESTÁ AQUÍ. Estuvo como enlace a Grammaster
-            y luego embebida, y las dos veces por lo mismo: no había forma
-            cómoda de llegar a ella. Ahora tiene pestaña propia en Grammaster,
-            entre la Guía y la Práctica, y esa es la única puerta. Traerla
-            también aquí era ofrecer el mismo material en dos sitios, y el
-            segundo siempre es el que se queda desactualizado. */}
-
-        {/* Para proyectar. Se queda DENTRO del contenedor que va a pantalla
-            completa: si viviera en el encabezado, proyectando no habría botón
-            para salir —solo Esc—. Apagado, porque no compite con la acción. */}
-        <button
-          onClick={alternarPantalla}
-          className="ml-auto flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
-        >
-          {presentando ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
-          <span className="hidden sm:inline">
-            {presentando ? (es ? 'Salir' : 'Exit') : (es ? 'Pantalla completa' : 'Full screen')}
-          </span>
+          ))}
+        </nav>
+        <button onClick={() => setPlegado(p => !p)}
+          aria-label={plegado ? (es ? 'Mostrar el menú' : 'Expand menu') : (es ? 'Plegar el menú' : 'Collapse menu')}
+          title={plegado ? (es ? 'Mostrar el menú' : 'Expand menu') : (es ? 'Plegar el menú' : 'Collapse menu')}
+          className="hidden md:flex items-center justify-center m-2 p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors">
+          {plegado ? <PanelLeftOpen size={18} aria-hidden="true" /> : <PanelLeftClose size={18} aria-hidden="true" />}
         </button>
-      </div>
+      </aside>
 
-      <div className={`flex-1 px-5 py-6 ${presentando ? 'flex flex-col justify-center' : ''}`}>
-        <div className={vista === 'dado' ? '' : 'hidden'}><Dado lang={lang} grande={presentando} /></div>
-        <div className={vista === 'ruleta' ? '' : 'hidden'}><Ruleta lang={lang} grande={presentando} /></div>
-        <div className={vista === 'grupos' ? '' : 'hidden'}><Grupos lang={lang} grande={presentando}
-                    nombres={nombres} ausentes={ausentes} origen={origen}
-                    onCargar={cargarCurso} onAlternar={alternarAusente} onCambiarLista={cambiarLista} onCambiarFecha={cambiarFecha} /></div>
-        <div className={vista === 'tiempo' ? '' : 'hidden'}><Temporizador lang={lang} grande={presentando} /></div>
-        <div className={vista === 'sopa' ? '' : 'hidden'}><Sopa lang={lang} grande={presentando} /></div>
-        <div className={vista === 'crucigrama' ? '' : 'hidden'}><Crucigrama lang={lang} grande={presentando} /></div>
-        <div className={vista === 'muro' ? '' : 'hidden'}><Muro lang={lang} grande={presentando} /></div>
-        <div className={vista === 'semaforo' ? '' : 'hidden'}><Semaforo lang={lang} grande={presentando} /></div>
-        <div className={vista === 'apuesta' ? '' : 'hidden'}><Apuesta lang={lang} grande={presentando} /></div>
-        <div className={vista === 'duda' ? '' : 'hidden'}><Duda lang={lang} grande={presentando}
-                    curso={presentes} origen={origen} onCargar={cargarCurso} onCambiarLista={cambiarLista} onCambiarFecha={cambiarFecha} /></div>
-        <div className={vista === 'antes' ? '' : 'hidden'}><AntesAhora lang={lang} grande={presentando}
-                    curso={presentes} origen={origen} onCargar={cargarCurso} onCambiarLista={cambiarLista} onCambiarFecha={cambiarFecha} /></div>
-        <div className={vista === 'notas' ? '' : 'hidden'}><Notas lang={lang} grande={presentando} /></div>
+      {/* ── EL ÁREA DE TRABAJO, que es lo que va a pantalla completa ──────── */}
+      <div ref={caja}
+        className={`${proyectando ? 'fixed inset-0 z-50' : 'relative flex-1 min-w-0 min-h-0'} flex flex-col bg-[#f5f6fb]`}>
 
-      </div>
+        {/* Escenario + panel. Siempre montado: si no, los portales de las
+            herramientas divididas no tendrían dónde caer. */}
+        <div className={dividida ? `flex-1 min-h-0 ${proyectando ? 'flex' : 'flex flex-col md:grid md:grid-cols-[minmax(0,1fr)_22rem] overflow-auto md:overflow-hidden'}` : 'hidden'}>
+          <section aria-label={es ? 'Escenario' : 'Stage'} className="relative flex-1 min-w-0 min-h-[60vh] md:min-h-0 flex">
+            <div ref={refs.escenario} style={{ containerType: 'size' }}
+              className="flex-1 min-w-0 flex flex-col items-center justify-center p-6 md:p-10" />
+            {!proyectando && BotonProyectar}
+          </section>
+          {!proyectando && (
+            <aside aria-label={es ? 'Controles' : 'Controls'}
+              className="bg-white border-t md:border-t-0 md:border-l border-slate-200 flex flex-col min-h-0">
+              <div ref={refs.panel} className="flex-1 md:overflow-y-auto p-5" />
+              <div className="p-4 border-t border-slate-200">
+                <div ref={refs.accion} />
+                <p className="hidden md:block mt-2 text-center text-xs text-muted">
+                  {es ? 'Atajo:' : 'Shortcut:'} <kbd className="px-1.5 py-0.5 rounded border border-slate-300 font-sans font-semibold text-slate-700">{es ? 'Espacio' : 'Space'}</kbd>
+                </p>
+              </div>
+            </aside>
+          )}
+        </div>
+
+        {/* Las que todavía van en una columna, como venían de Grammar HUB. */}
+        <div className={dividida ? 'hidden' : `relative flex-1 min-h-0 overflow-auto px-5 py-6 ${proyectando ? 'flex flex-col justify-center' : ''}`}>
+          {!proyectando && BotonProyectar}
+          {anterior('sopa', <Sopa lang={lang} grande={proyectando} />)}
+          {anterior('crucigrama', <Crucigrama lang={lang} grande={proyectando} />)}
+          {anterior('muro', <Muro lang={lang} grande={proyectando} />)}
+          {anterior('semaforo', <Semaforo lang={lang} grande={proyectando} />)}
+          {anterior('apuesta', <Apuesta lang={lang} grande={proyectando} />)}
+          {anterior('duda', <Duda lang={lang} grande={proyectando} {...cursoCierre} />)}
+          {anterior('antes', <AntesAhora lang={lang} grande={proyectando} {...cursoCierre} />)}
+          {anterior('notas', <Notas lang={lang} grande={proyectando} />)}
+        </div>
+
+        {/* Las divididas no pintan aquí: pintan en sus zonas, por portal. */}
+        <ZonasCtx.Provider value={zona('dado')}><Dado lang={lang} /></ZonasCtx.Provider>
+        <ZonasCtx.Provider value={zona('ruleta')}><Ruleta lang={lang} /></ZonasCtx.Provider>
+        <ZonasCtx.Provider value={zona('grupos')}><Grupos lang={lang} {...curso} /></ZonasCtx.Provider>
+        <ZonasCtx.Provider value={zona('tiempo')}><Temporizador lang={lang} /></ZonasCtx.Provider>
+
+        {/* Proyectando: la acción y la salida, flotando abajo a la derecha. */}
+        {proyectando && (
+          <div className="absolute bottom-4 right-4 z-20 flex items-center gap-2">
+            <div ref={refs.flotante} />
+            <button onClick={salir}
+              className="flex items-center gap-1.5 px-3 py-3.5 rounded-xl text-sm font-semibold text-slate-700 bg-white border border-slate-300 shadow-lg hover:bg-slate-100 transition-colors">
+              <X size={16} aria-hidden="true" />
+              {es ? 'Salir' : 'Exit'} <kbd className="font-sans text-xs text-muted">Esc</kbd>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -20,11 +20,12 @@
    ========================================================================== */
 import React, { useState, useRef, useEffect } from 'react';
 import { formatoReloj, estadoReloj, PRESETS } from '../temporizador';
-import { ACCION, APAGADO, opcion, NUMERO } from '../ui';
+import { APAGADO, opcion, NUMERO } from '../ui';
+import { Panel, Escenario, Accion, Cabeza } from '../zonas';
 
-/* `grande` = proyectando. El reloj es lo único que importa a diez metros, así
-   que se lleva casi toda la pantalla. */
-const Temporizador = ({ lang = 'es', grande = false }) => {
+/* El número va al escenario y se lleva casi todo: es lo único que importa a
+   diez metros. Proyectando, el escenario es la pantalla entera. */
+const Temporizador = ({ lang = 'es' }) => {
   const es = lang === 'es';
   const [total, setTotal] = useState(180);        // lo que se puso, en segundos
   const [restante, setRestante] = useState(180);
@@ -103,30 +104,47 @@ const Temporizador = ({ lang = 'es', grande = false }) => {
   const color = estado === 'normal' ? 'text-slate-900' : 'text-red-700';
 
   return (
-    <section className="w-full max-w-xl mx-auto">
-      <h2 className="text-lg font-bold text-slate-900 mb-1">{es ? 'Temporizador' : 'Timer'}</h2>
-      <p className="text-sm text-muted mb-4">
-        {es ? 'Para las actividades con tiempo. Los últimos diez segundos se ponen en rojo.'
-            : 'For timed activities. The last ten seconds turn red.'}
-      </p>
+    <>
+      {/* El número, que es todo lo que hay que ver desde el fondo de la sala.
+          Se mide contra el ESCENARIO (cqw/cqh) y no contra la ventana: con
+          `20vw` se salía de su caja al proyectar, porque la caja no medía el
+          ancho de la ventana. */}
+      <Escenario>
+        <div aria-live="polite" className="text-center">
+          <p className={`font-extrabold tabular-nums leading-none ${color}`}
+             style={{ fontSize: 'min(30cqw, 62cqh)' }}>{formatoReloj(restante)}</p>
+          {estado === 'fin' && (
+            <p className="mt-2 font-bold text-red-700" style={{ fontSize: 'min(5cqw, 9cqh)' }}>
+              {es ? '¡Se acabó el tiempo!' : "Time's up!"}
+            </p>
+          )}
+        </div>
+      </Escenario>
 
-      <div className="flex flex-wrap items-center gap-2 mb-3">
-        {PRESETS.map(m => (
-          <button
-            key={m}
-            onClick={() => aplicar(m * 60)}
-            aria-pressed={total === m * 60}
-            className={opcion(total === m * 60)}
-          >
-            {m} min
-          </button>
-        ))}
+      <Panel>
+        <Cabeza titulo={es ? 'Temporizador' : 'Timer'}>
+          {es ? 'Para las actividades con tiempo. Los últimos diez segundos se ponen en rojo.'
+              : 'For timed activities. The last ten seconds turn red.'}
+        </Cabeza>
+
+        <div className="flex flex-wrap gap-2 mb-3">
+          {PRESETS.map(m => (
+            <button
+              key={m}
+              onClick={() => aplicar(m * 60)}
+              aria-pressed={total === m * 60}
+              className={opcion(total === m * 60)}
+            >
+              {m} min
+            </button>
+          ))}
+        </div>
         {/* «OTRO» EN DOS CAMPOS, NO UNO. Con un solo campo en minutos, 30
             segundos no tenía forma de escribirse: el piso era 1 minuto. Min y
             seg se leen juntos en `aplicarOtro` y se combinan en un solo total,
             así que dejar el de minutos en blanco y poner «30» en segundos
             alcanza exactamente lo que se pidió en clase. */}
-        <div className="flex items-center gap-1 text-sm text-slate-600">
+        <div className="flex items-center gap-1.5 text-sm text-slate-600 mb-5">
           <span>{es ? 'otro' : 'other'}</span>
           <input
             ref={minRef}
@@ -135,7 +153,7 @@ const Temporizador = ({ lang = 'es', grande = false }) => {
             aria-label={es ? 'minutos' : 'minutes'}
             className={NUMERO}
           />
-          <span>{es ? 'min' : 'min'}</span>
+          <span>min</span>
           <input
             ref={segRef}
             type="number" min="0" max="59" placeholder="0"
@@ -145,40 +163,22 @@ const Temporizador = ({ lang = 'es', grande = false }) => {
           />
           <span>{es ? 'seg' : 'sec'}</span>
         </div>
-      </div>
 
-      {/* El número, que es todo lo que hay que ver desde el fondo de la sala. */}
-      <div
-        aria-live="polite"
-        className="rounded-2xl border border-slate-200 bg-white px-6 py-8 text-center"
-      >
-        <p className={`font-extrabold tabular-nums ${color} ${grande ? 'text-[20vw] leading-none' : 'text-6xl sm:text-7xl'}`}>{formatoReloj(restante)}</p>
-        {estado === 'fin' && (
-          <p className={`mt-1 font-bold text-red-700 ${grande ? 'text-[4vw]' : 'text-base'}`}>{es ? '¡Se acabó el tiempo!' : "Time's up!"}</p>
-        )}
-      </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <button onClick={reiniciar} className={APAGADO}>
+            {es ? 'Reiniciar' : 'Reset'}
+          </button>
+          <label className="flex items-center gap-1.5 text-sm text-slate-600 cursor-pointer">
+            <input type="checkbox" checked={suena} onChange={(e) => setSuena(e.target.checked)} />
+            {es ? 'pitar al terminar' : 'beep when done'}
+          </label>
+        </div>
+      </Panel>
 
-      <div className="mt-3 flex flex-wrap gap-2">
-        <button
-          onClick={corriendo ? pausar : arrancar}
-          disabled={!corriendo && restante <= 0}
-          className={`flex-1 ${ACCION}`}
-        >
-          {corriendo ? (es ? 'Pausar' : 'Pause') : (es ? 'Empezar' : 'Start')}
-        </button>
-        <button
-          onClick={reiniciar}
-          className={`shrink-0 ${APAGADO}`}
-        >
-          {es ? 'Reiniciar' : 'Reset'}
-        </button>
-      </div>
-
-      <label className="mt-3 flex items-center gap-1.5 text-sm text-slate-600 cursor-pointer">
-        <input type="checkbox" checked={suena} onChange={(e) => setSuena(e.target.checked)} />
-        {es ? 'pitar al terminar' : 'beep when done'}
-      </label>
-    </section>
+      <Accion onClick={corriendo ? pausar : arrancar} disabled={!corriendo && restante <= 0}>
+        {corriendo ? (es ? 'Pausar' : 'Pause') : (es ? 'Empezar' : 'Start')}
+      </Accion>
+    </>
   );
 };
 

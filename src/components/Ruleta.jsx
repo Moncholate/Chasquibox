@@ -23,6 +23,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { parsearLista } from '../lista';
 import { siguienteIndice, deltaHasta, ordenInicial, centroDelSector, queRotular } from '../ruleta';
 import { ACCION, ENLACE } from '../ui';
+import { Panel, Escenario, Accion, Cabeza } from '../zonas';
 
 const TINTES = ['#e0e7ff', '#c7d2fe'];   // indigo-100 / indigo-200: la rueda no compite con el resultado
 const GIRO_MS = 3000;
@@ -42,9 +43,9 @@ const sector = (indice, total) => {
   return `M100,100 L${x0.toFixed(2)},${y0.toFixed(2)} A96,96 0 ${paso > 180 ? 1 : 0},1 ${x1.toFixed(2)},${y1.toFixed(2)} Z`;
 };
 
-/* `grande` = proyectando: la rueda pasa a medirse en alto de pantalla y el
-   cartel del resultado crece con ella. Es el que se lee; la rueda es el gancho. */
-const Ruleta = ({ lang = 'es', grande = false }) => {
+/* La rueda y el cartel van al escenario y se miden contra él (cqw/cqh), así
+   crecen solos al proyectar. El cartel es el que se lee; la rueda es el gancho. */
+const Ruleta = ({ lang = 'es' }) => {
   const es = lang === 'es';
   const [texto, setTexto] = useState('');
   const [items, setItems] = useState([]);
@@ -118,46 +119,28 @@ const Ruleta = ({ lang = 'es', grande = false }) => {
   };
 
   return (
-    <section className={grande ? 'w-full max-w-3xl mx-auto' : 'w-full max-w-xl mx-auto'}>
-      <h2 className="text-lg font-bold text-slate-900 mb-1">{es ? 'Ruleta' : 'Wheel'}</h2>
-      <p className="text-sm text-muted mb-4">
-        {es ? 'Para el inicio de la clase: pon nombres, temas o preguntas, uno por línea, y gira.'
-            : 'For warm-ups: add the verbs or questions, one per line, and spin.'}
-      </p>
-
-      {!items.length ? (
-        <>
-          <textarea
-            value={texto}
-            onChange={(e) => setTexto(e.target.value)}
-            rows={6}
-            placeholder={es ? 'Un nombre, tema o pregunta por línea' : 'One verb or question per line'}
-            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-          />
-          <button
-            onClick={usarLista}
-            disabled={!parsearLista(texto).length}
-            className={`mt-2 ${ACCION}`}
-          >
-            {es ? 'Usar esta lista' : 'Use this list'}
-          </button>
-        </>
-      ) : (
-        <>
-          <div className="flex flex-col items-center">
+    <>
+      <Escenario>
+        {!items.length ? (
+          <p className="text-muted text-center max-w-sm">
+            {es ? 'Escribe la lista en el panel de la derecha y la rueda aparece aquí.'
+                : 'Type the list in the panel on the right and the wheel shows up here.'}
+          </p>
+        ) : (
+          <div className="flex flex-col items-center w-full">
             {/* El puntero, arriba. La rueda gira debajo de él. */}
             <div className="relative">
               <div
                 aria-hidden="true"
                 className="absolute left-1/2 -translate-x-1/2 -top-1 w-0 h-0 z-10"
-                style={{ borderLeft: '9px solid transparent', borderRight: '9px solid transparent', borderTop: '16px solid #4338ca' }}
+                style={{ borderLeft: '12px solid transparent', borderRight: '12px solid transparent', borderTop: '22px solid #4338ca' }}
               />
               <svg
                 viewBox="0 0 200 200"
                 role="img"
                 aria-label={es ? `Ruleta con ${items.length} tarjetas` : `Wheel with ${items.length} cards`}
-                className={grande ? 'w-[46vh] h-[46vh]' : 'w-56 h-56 sm:w-64 sm:h-64'}
                 style={{
+                  width: 'min(60cqh, 56cqw)', height: 'min(60cqh, 56cqw)',
                   transform: `rotate(${rotacion}deg)`,
                   transition: girando ? `transform ${GIRO_MS}ms cubic-bezier(.15,.9,.2,1)` : 'none',
                 }}
@@ -205,54 +188,88 @@ const Ruleta = ({ lang = 'es', grande = false }) => {
               </svg>
             </div>
 
-            <button
-              onClick={girar}
-              disabled={girando}
-              className={`mt-3 ${ACCION}`}
-            >
-              {girando ? (es ? 'Girando…' : 'Spinning…') : (es ? 'Girar' : 'Spin')}
-            </button>
+            {/* El resultado, que es lo que de verdad se lee. */}
+            <div aria-live="polite" className="mt-[3cqh] text-center w-full">
+              {elegido == null ? (
+                <p className="text-muted">{girando ? '…' : (es ? 'Gira la rueda' : 'Spin the wheel')}</p>
+              ) : (
+                <p className="font-bold text-slate-900 leading-tight" style={{ fontSize: 'min(5cqw, 9cqh)' }}>
+                  {/* El número delante para poder casar el cartel con el sector en
+                      el que se paró la rueda, que es lo que la clase mira. */}
+                  <span className="text-muted tabular-nums mr-2">{elegido + 1}</span>
+                  {items[elegido]}
+                </p>
+              )}
+            </div>
           </div>
+        )}
+      </Escenario>
 
-          {/* El resultado, que es lo que de verdad se lee. */}
-          <div
-            aria-live="polite"
-            className="mt-3 rounded-2xl border border-slate-200 bg-white px-5 py-6 text-center"
-          >
-            {elegido == null ? (
-              <p className="text-muted text-sm">{es ? 'Toca Girar' : 'Tap Spin'}</p>
-            ) : (
-              <p className={`font-bold text-slate-900 ${grande ? 'text-[5vw] leading-tight' : 'text-2xl sm:text-3xl'}`}>
-                {/* El número delante para poder casar el cartel con el sector en
-                    el que se paró la rueda, que es lo que la clase mira. */}
-                <span className="text-muted tabular-nums mr-2">{elegido + 1}</span>
-                {items[elegido]}
-              </p>
-            )}
-          </div>
+      <Panel>
+        <Cabeza titulo={es ? 'Ruleta' : 'Wheel'}>
+          {es ? 'Para el inicio de la clase: pon nombres, temas o preguntas, uno por línea, y gira.'
+              : 'For warm-ups: add the verbs or questions, one per line, and spin.'}
+        </Cabeza>
 
-          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
-            <label className="flex items-center gap-1.5 text-sm text-slate-600 cursor-pointer">
-              <input type="checkbox" checked={sinRepetir} onChange={(e) => { setSinRepetir(e.target.checked); setUsados([]); setVueltaNueva(false); }} />
-              {es ? 'sin repetir' : 'no repeats'}
-            </label>
-            {sinRepetir && (
-              <span className="text-sm text-slate-600">
-                {vueltaNueva
-                  ? (es ? 'salieron todas · vuelta nueva' : 'all came out · new round')
-                  : `${quedan} ${es ? 'por salir' : 'left'}`}
-              </span>
-            )}
+        {!items.length ? (
+          <>
+            <textarea
+              value={texto}
+              onChange={(e) => setTexto(e.target.value)}
+              rows={10}
+              placeholder={es ? 'Un nombre, tema o pregunta por línea' : 'One verb or question per line'}
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+            />
             <button
-              onClick={() => { setItems([]); setElegido(null); setUsados([]); }}
-              className={ENLACE}
+              onClick={usarLista}
+              disabled={!parsearLista(texto).length}
+              className={`mt-2 ${ACCION}`}
             >
-              {es ? 'cambiar lista' : 'change list'}
+              {es ? 'Usar esta lista' : 'Use this list'}
             </button>
-          </div>
-        </>
+          </>
+        ) : (
+          <>
+            <p className="text-sm text-slate-600 mb-2">
+              {items.length} {es ? 'tarjetas' : 'cards'}
+              {sinRepetir && (
+                <> · {vueltaNueva
+                  ? (es ? 'salieron todas, vuelta nueva' : 'all came out, new round')
+                  : `${quedan} ${es ? 'por salir' : 'left'}`}</>
+              )}
+            </p>
+            {/* Lo que ya salió queda tachado: en clase se discute («¡ese ya
+                salió!»), y tenerlo a la vista zanja la discusión. */}
+            <ol className="mb-4 space-y-0.5 text-sm">
+              {items.map((item, i) => (
+                <li key={i} className={`flex gap-2 ${usados.includes(i) && sinRepetir ? 'text-slate-500 line-through' : 'text-slate-700'}`}>
+                  <span className="tabular-nums font-bold w-6 text-right shrink-0">{i + 1}</span>
+                  <span className="min-w-0 break-words">{item}</span>
+                </li>
+              ))}
+            </ol>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+              <label className="flex items-center gap-1.5 text-sm text-slate-600 cursor-pointer">
+                <input type="checkbox" checked={sinRepetir} onChange={(e) => { setSinRepetir(e.target.checked); setUsados([]); setVueltaNueva(false); }} />
+                {es ? 'sin repetir' : 'no repeats'}
+              </label>
+              <button
+                onClick={() => { setItems([]); setElegido(null); setUsados([]); }}
+                className={ENLACE}
+              >
+                {es ? 'cambiar lista' : 'change list'}
+              </button>
+            </div>
+          </>
+        )}
+      </Panel>
+
+      {items.length > 0 && (
+        <Accion onClick={girar} disabled={girando}>
+          {girando ? (es ? 'Girando…' : 'Spinning…') : (es ? 'Girar' : 'Spin')}
+        </Accion>
       )}
-    </section>
+    </>
   );
 };
 

@@ -104,8 +104,9 @@
 :root[data-theme="dark"] .text-blue-700 { color: #60a5fa !important; }
 /* El sujeto del dado lleva el color de rol (design-tokens: subject). blue-600
    pasaba por ser texto grande (3,9:1), pero proyectado se apagaba; el valor
-   oscuro del token es blue-400, el mismo de Kachai y Grammaster. */
-:root[data-theme="dark"] .text-blue-600 { color: #60a5fa !important; }
+   oscuro del token es blue-400, el mismo de Kachai y Grammaster. Por la
+   variable y no copiado: si el token cambia, esto cambia con él. */
+:root[data-theme="dark"] .text-blue-600 { color: var(--rol-subject) !important; }
 :root[data-theme="dark"] .text-red-700 { color: #f87171 !important; }
 :root[data-theme="dark"] .bg-rose-50 { background-color: #331520 !important; }
 :root[data-theme="dark"] .border-rose-200 { border-color: #572635 !important; }
@@ -212,11 +213,12 @@ button:disabled { cursor: not-allowed; }
    que distinguirse sin robárselo. En oscuro esa tinta cae a 1,92:1 sobre el
    tinte y a 2,24:1 sobre la tarjeta — lo cazó la sonda antes de publicar.
    `--marca` en su valor oscuro da 4,90 y 5,70. Se usa la variable y no un hex
-   copiado: es lo que vigila `check-roles-css`. */
-:root[data-theme="dark"] .bg-indigo-50.text-indigo-700,
-:root[data-theme="dark"] .bg-indigo-50 .text-indigo-700,
-:root[data-theme="dark"] .bg-white.text-indigo-700,
-:root[data-theme="dark"] .bg-white .text-indigo-700 { color: var(--marca) !important; }
+   copiado: es lo que vigila `check-roles-css`.
+   SIN CONTENEDOR desde el 6-oct-2026: era solo dentro de .bg-white y
+   .bg-indigo-50, y el tiempo verbal del dado pasó al escenario —sobre la
+   página, sin tarjeta— y cayó a 2,44:1. Todo `indigo-700` de esta app va sobre
+   una superficie que en oscuro se oscurece, así que la regla vale siempre. */
+:root[data-theme="dark"] .text-indigo-700 { color: var(--marca) !important; }
 
 /* Tinta de marca que la capa no invertía y quedaba oscura sobre fondo oscuro.
    Compuestos a propósito: los chips sobre tinte claro conservan su texto.
