@@ -1,9 +1,9 @@
 {
-  "name": "chasquibox",
+  "name": "teachers-utility-belt",
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Chasquibox - la caja de herramientas de clase",
+  "description": "Teacher's Utility Belt - la caja de herramientas de clase",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

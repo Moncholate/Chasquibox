@@ -1,19 +1,19 @@
 {
-  "name": "Chasquibox",
-  "short_name": "Chasquibox",
+  "name": "Teacher's Utility Belt",
+  "short_name": "Utility Belt",
   "description": "La caja de herramientas de clase: dado, ruleta, grupos, reloj, sopa de letras, crucigrama, actividades de cierre y notas.",
-  "id": "/Chasquibox/",
-  "start_url": "/Chasquibox/",
-  "scope": "/Chasquibox/",
+  "id": "/teachers-utility-belt/",
+  "start_url": "/teachers-utility-belt/",
+  "scope": "/teachers-utility-belt/",
   "display": "standalone",
   "theme_color": "#1e40af",
   "background_color": "#ffffff",
   "lang": "es",
   "icons": [
-    { "src": "/Chasquibox/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/Chasquibox/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/Chasquibox/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
-    { "src": "/Chasquibox/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+    { "src": "/teachers-utility-belt/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/teachers-utility-belt/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/teachers-utility-belt/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/teachers-utility-belt/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
   ],
   "categories": ["education", "productivity"]
 }

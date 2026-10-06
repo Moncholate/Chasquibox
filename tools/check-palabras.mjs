@@ -165,7 +165,7 @@ console.log('\nLO QUE NO PUEDE ROMPERSE NUNCA');
 
 console.log('\nla Ñ es una letra, no una N con tilde');
 {
-  /* En Chasquibox la sopa la usan docentes de cualquier asignatura. «año»
+  /* En Teacher's Utility Belt la sopa la usan docentes de cualquier asignatura. «año»
      convertido en «ANO» no se puede proyectar en una sala. */
   if (soloLetras('año') === 'AÑO') ok('«año» queda AÑO');
   else fallo(`«año» quedó ${soloLetras('año')}`);

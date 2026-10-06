@@ -1,5 +1,5 @@
 /* ============================================================================
-   CHASQUIBOX
+   TEACHER'S UTILITY BELT
    ----------------------------------------------------------------------------
    La caja de herramientas de clase, ya fuera de Grammar HUB. Allá vivía como
    una vista del hub de inglés; aquí es una app propia porque sirve a docentes
@@ -34,7 +34,7 @@ const App = () => (
   <div className="min-h-screen bg-[#f5f6fb] flex flex-col">
     <header className="bg-white border-b border-slate-200 px-4 py-2.5 flex items-center gap-2.5">
       <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" className="w-7 h-7" />
-      <h1 className="text-base font-extrabold text-slate-900">Chasquibox</h1>
+      <h1 className="text-base font-extrabold text-slate-900">Teacher's Utility Belt</h1>
       <span className="hidden sm:inline text-sm text-muted">· herramientas de clase</span>
       <div className="ml-auto"><ThemeToggle /></div>
     </header>

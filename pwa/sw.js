@@ -1,5 +1,5 @@
 /* ============================================================================
-   CHASQUIBOX SIN INTERNET
+   TEACHER'S UTILITY BELT SIN INTERNET
    ----------------------------------------------------------------------------
    El wifi de una sala falla justo cuando se va a sortear algo. Este service
    worker guarda la app entera en la PRIMERA visita, así que desde la segunda
@@ -20,7 +20,10 @@
        viejo que servir por error.
    ========================================================================== */
 const VERSION = '__VERSION__';
-const CACHE = `chasquibox-${VERSION}`;
+const CACHE = `utility-belt-${VERSION}`;
+/* La app se llamó Chasquibox hasta el 6-oct-2026 y vivía en /Chasquibox/. Las
+   copias de entonces quedan en el mismo origen: también se borran. */
+const PREFIJOS = ['utility-belt-', 'chasquibox-'];
 const PRECACHE = __PRECACHE__;
 const BASE = new URL(self.registration.scope).pathname;
 const INDEX = `${BASE}index.html`;
@@ -36,7 +39,7 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then(nombres => Promise.all(
-      nombres.filter(n => n.startsWith('chasquibox-') && n !== CACHE).map(n => caches.delete(n))
+      nombres.filter(n => PREFIJOS.some(p => n.startsWith(p)) && n !== CACHE).map(n => caches.delete(n))
     )).then(() => self.clients.claim())
   );
 });

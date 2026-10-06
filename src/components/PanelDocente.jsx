@@ -2,7 +2,7 @@
    HERRAMIENTAS DE CLASE
    ----------------------------------------------------------------------------
    Para quien enseña, de pie frente al curso: se usa en cinco segundos, a veces
-   proyectado. Nació como una vista de Grammar HUB y se mudó a Chasquibox el
+   proyectado. Nació como una vista de Grammar HUB y se mudó a Teacher's Utility Belt el
    5-oct-2026, porque sirve a docentes de cualquier asignatura y no solo de
    inglés.
 

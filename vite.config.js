@@ -14,7 +14,7 @@ const listarPublic = (dir, base = dir) => readdirSync(dir).flatMap(f => {
 });
 
 const offline = () => ({
-  name: 'chasquibox-offline',
+  name: 'utility-belt-offline',
   apply: 'build',
   generateBundle(_, bundle) {
     const hash = createHash('sha256');
@@ -42,7 +42,7 @@ const offline = () => ({
 });
 
 export default defineConfig({
-  base: '/Chasquibox/',  // Para GitHub Pages
+  base: '/teachers-utility-belt/',  // Para GitHub Pages
   plugins: [react(), offline()],
   server: {
     port: 5174,

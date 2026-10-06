@@ -1,4 +1,4 @@
-# Chasquibox
+# Teacher's Utility Belt
 
 La caja de herramientas de clase: para docentes de cualquier asignatura, gratis y sin registrarse.
 
@@ -8,7 +8,7 @@ La caja de herramientas de clase: para docentes de cualquier asignatura, gratis 
 | Cierre | El muro, Semáforo, Apuesta, La duda, Antes / Ahora |
 | Corregir | Notas (escala chilena 1.0–7.0) |
 
-Nació como "Herramientas de clase" dentro de Grammar HUB y se mudó aquí el 5-oct-2026. Es la primera app del bundle docente.
+Nació como "Herramientas de clase" dentro de Grammar HUB y se mudó aquí el 5-oct-2026. Se llamó Chasquibox hasta el 6-oct-2026. Es la primera app del bundle docente.
 
 ## Reglas
 
@@ -20,7 +20,7 @@ Nació como "Herramientas de clase" dentro de Grammar HUB y se mudó aquí el 5-
 
 ```
 npm install
-npm run dev      # http://localhost:5174/Chasquibox/
+npm run dev      # http://localhost:5174/teachers-utility-belt/
 npm run check    # las comprobaciones de las herramientas
 npm run build
 ```
