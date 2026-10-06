@@ -8,7 +8,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "check": "node tools/check-grupos.mjs && node tools/check-ruleta.mjs && node tools/check-lista-curso.mjs && node tools/check-semaforo.mjs && node tools/check-molde.mjs && node tools/check-muro.mjs && node tools/check-palabras.mjs && node tools/check-crucigrama.mjs && node tools/check-sopa.mjs && node tools/check-notas.mjs"
+    "check": "node tools/check-grupos.mjs && node tools/check-ruleta.mjs && node tools/check-lista-curso.mjs && node tools/check-semaforo.mjs && node tools/check-molde.mjs && node tools/check-muro.mjs && node tools/check-palabras.mjs && node tools/check-crucigrama.mjs && node tools/check-sopa.mjs && node tools/check-notas.mjs",
+    "check-contraste": "node check-contraste-render.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.544.0",
