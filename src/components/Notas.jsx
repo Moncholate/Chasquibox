@@ -91,20 +91,24 @@ const Notas = ({ lang = 'es' }) => {
           <p role="alert" className="text-center font-semibold text-red-700 max-w-sm">{AVISOS[problema]}</p>
         ) : (
           <div className="w-full max-h-full overflow-auto">
-            {/* ── UNA PRUEBA: la nota, grande. Es lo que se mira prueba a prueba. */}
-            <div aria-live="polite" className="flex items-baseline justify-center gap-4">
-              <span className={`font-black tabular-nums leading-none ${laNota == null ? 'text-slate-400' : aprueba ? APROBADA : REPROBADA}`}
-                    style={{ fontSize: 'max(3.5rem, min(12cqw, 22cqh))' }}>
-                {formatoNota(laNota, lang)}
-              </span>
-              {laNota != null && (
-                <span className={`font-bold ${aprueba ? APROBADA : REPROBADA}`} style={{ fontSize: 'max(0.9rem, min(2cqw, 3.6cqh))' }}>
-                  {aprueba ? (es ? 'aprobada' : 'pass') : (es ? 'reprobada' : 'fail')}
-                </span>
-              )}
+            {/* ── UNA PRUEBA: la nota, grande. Es lo que se mira prueba a prueba.
+                Sin puntaje no se dibuja nada: el «—» de espera, a este tamaño,
+                se leía como una raya gris suelta y no como «todavía no hay nota». */}
+            <div aria-live="polite">
+              {laNota != null ? (
+                <div className="flex items-baseline justify-center gap-4">
+                  <span className={`font-black tabular-nums leading-none ${aprueba ? APROBADA : REPROBADA}`}
+                        style={{ fontSize: 'max(3.5rem, min(12cqw, 22cqh))' }}>
+                    {formatoNota(laNota, lang)}
+                  </span>
+                  <span className={`font-bold ${aprueba ? APROBADA : REPROBADA}`} style={{ fontSize: 'max(0.9rem, min(2cqw, 3.6cqh))' }}>
+                    {aprueba ? (es ? 'aprobada' : 'pass') : (es ? 'reprobada' : 'fail')}
+                  </span>
+                </div>
+              ) : null}
             </div>
             {laNota == null && (
-              <p className="mt-2 text-center text-sm text-muted">
+              <p className="text-center text-sm text-muted">
                 {es ? 'Escribe el puntaje en el panel de la derecha.' : 'Type the score in the panel on the right.'}
               </p>
             )}
