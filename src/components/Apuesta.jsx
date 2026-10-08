@@ -46,6 +46,7 @@ import { parsearLista } from '../lista';
 import { formatoReloj, estadoReloj } from '../temporizador';
 import { APAGADO, opcion } from '../ui';
 import { Panel, Escenario, Accion, Cabeza } from '../zonas';
+import BotonCelulares from './BotonCelulares';
 
 /* Cuatro minutos para cinco oraciones. Menos deja a media clase sin terminar,
    y una apuesta sobre algo que no se terminó no mide calibración: mide prisa. */
@@ -222,6 +223,7 @@ const Apuesta = ({ lang = 'es' }) => {
                 ))}
               </div>
             </div>
+            <BotonCelulares lang={lang} disabled={!consignas.length} actividad={{ tipo: 'apuesta', pregunta: '', consignas }} />
           </div>
         )}
 

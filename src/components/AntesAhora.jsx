@@ -38,6 +38,7 @@ import CargarCurso from './CargarCurso';
 import OrigenLista from './OrigenLista';
 import { APAGADO, opcion, ENLACE } from '../ui';
 import { Panel, Escenario, Accion, Cabeza } from '../zonas';
+import BotonCelulares from './BotonCelulares';
 
 /* Dos minutos. Es más que «La duda» porque aquí se escriben dos frases y una
    razón, y menos que la apuesta porque no hay que producir gramática nueva. */
@@ -226,6 +227,7 @@ const AntesAhora = ({ lang = 'es', curso = [], origen = null, onCargar, onCambia
             </div>
 
             <PuertaLista />
+            <BotonCelulares lang={lang} actividad={{ tipo: 'antesahora', pregunta: '', antes: antes.trim(), ahora: ahora.trim() }} />
           </div>
         )}
 

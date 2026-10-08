@@ -43,6 +43,7 @@ import React, { useState } from 'react';
 import { lectura, sumar, VACIO } from '../semaforo';
 import { APAGADO, ENLACE } from '../ui';
 import { Panel, Escenario, Accion, Cabeza } from '../zonas';
+import BotonCelulares from './BotonCelulares';
 
 /* Colores de LÁMPARA, no de interfaz: verde, ámbar y rojo de semáforo de calle.
    Van fijos en los dos temas porque la carcasa también es fija — es un objeto
@@ -276,6 +277,7 @@ const Semaforo = ({ lang = 'es' }) => {
                 className="mt-1 w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
               />
             </label>
+            <BotonCelulares lang={lang} disabled={!frase} actividad={{ tipo: 'semaforo', pregunta: frase }} />
           </div>
         )}
 

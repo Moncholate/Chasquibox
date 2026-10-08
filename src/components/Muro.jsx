@@ -23,6 +23,10 @@
    efecto que no estaba buscado y vale la pena: decirlo en voz alta ANTES de
    verlo escrito es media rutina, y obliga a formularlo entero.
 
+   CON CELULARES (8-oct-2026): «Hacer con celulares» abre el mismo muro en
+   Liveboard, donde cada uno manda el suyo desde el teléfono. Esta versión no
+   cambia: sigue sin servidor, y es la que se usa cuando no hay internet.
+
    La aritmética del muro —qué cabe, qué se repite, cuánto encoge— está en
    `../muro.js`, con pruebas: un muro que se sale del proyector o que parpadea en
    cada añadido no da error, solo arruina el momento.
@@ -33,6 +37,7 @@ import { partirEnHuecos, tieneTexto, HUECO } from '../molde';
 import { formatoReloj, estadoReloj } from '../temporizador';
 import { APAGADO, opcion, ENLACE } from '../ui';
 import { Panel, Escenario, Accion, Cabeza } from '../zonas';
+import BotonCelulares from './BotonCelulares';
 
 /* Minuto y medio para pensarlo. Es corto a propósito: un logro que cuesta tres
    minutos de encontrar probablemente no es de hoy. */
@@ -207,6 +212,7 @@ const Muro = ({ lang = 'es' }) => {
                 ))}
               </div>
             </div>
+            <BotonCelulares lang={lang} disabled={!tieneTexto(molde)} actividad={{ tipo: 'muro', pregunta: molde.trim() }} />
           </div>
         )}
 

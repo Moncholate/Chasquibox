@@ -53,6 +53,7 @@ import CargarCurso from './CargarCurso';
 import OrigenLista from './OrigenLista';
 import { APAGADO, opcion, ENLACE } from '../ui';
 import { Panel, Escenario, Accion, Cabeza } from '../zonas';
+import BotonCelulares from './BotonCelulares';
 
 /* Minuto y medio por defecto. Menos no alcanza para releer lo que se hizo y
    más se convierte en tiempo muerto: se nota en la sala cuando sobra. */
@@ -232,6 +233,7 @@ const Duda = ({ lang = 'es', curso = [], origen = null, onCargar, onCambiarLista
             </div>
 
             <PuertaLista />
+            <BotonCelulares lang={lang} disabled={!tieneTexto(texto)} actividad={{ tipo: 'duda', pregunta: texto.trim() }} />
           </div>
         )}
 
