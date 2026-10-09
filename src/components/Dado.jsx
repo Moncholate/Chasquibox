@@ -18,7 +18,7 @@
        dado (en Grammar HUB venía del hub) y de ahí sale la lista
        (`../tiempos.js`, sobre `curriculum.json`). Sin curso elegido salen todos.
 
-   Sujeto, forma y tiempo son de INGLÉS y van rotulados así: Teacher's Utility Belt es
+   Sujeto, forma y tiempo son de INGLÉS y van rotulados así: Teacher's Toolbox es
    para cualquier asignatura y el número es el dado de todos.
 
    DECISIONES QUE NO SON DE ADORNO:

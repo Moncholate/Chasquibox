@@ -1,5 +1,5 @@
 /* ============================================================================
-   CONTRASTE DE LO QUE SE VE · Teacher's Utility Belt
+   CONTRASTE DE LO QUE SE VE · Teacher's Toolbox
    Uso:  npm run check-contraste
    ----------------------------------------------------------------------------
    El motor vive en design-tokens y llega generado: mide cada elemento con texto
@@ -50,9 +50,9 @@ const lista = async (page, nombres) => {
 };
 
 correr({
-  nombre: "TEACHER'S UTILITY BELT",
+  nombre: "TEACHER'S TOOLBOX",
   puerto: 5174,
-  ruta: '/teachers-utility-belt/',
+  ruta: '/teachers-toolbox/',
 
   conducir: async (page) => { await viva(page, 'al arrancar'); },
 

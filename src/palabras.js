@@ -83,7 +83,7 @@ const partirFuera = (linea) => {
 
 /** Solo letras, y en mayúsculas: una casilla es una letra. */
 /* La \u00d1 se queda: es una letra del espa\u00f1ol, no una N con tilde. Quitarla con
-   las dem\u00e1s tildes hac\u00eda de \u00aba\u00f1o\u00bb un \u00abANO\u00bb, y en Teacher's Utility Belt la sopa la usan
+   las dem\u00e1s tildes hac\u00eda de \u00aba\u00f1o\u00bb un \u00abANO\u00bb, y en Teacher's Toolbox la sopa la usan
    docentes de cualquier asignatura, no solo de ingl\u00e9s. */
 export const soloLetras = (s) => String(s == null ? '' : s)
   .normalize('NFC').toUpperCase()

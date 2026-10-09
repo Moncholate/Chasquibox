@@ -1,5 +1,5 @@
 /* ============================================================================
-   TEACHER'S UTILITY BELT
+   TEACHER'S TOOLBOX
    ----------------------------------------------------------------------------
    La caja de herramientas de clase, ya fuera de Grammar HUB. Allá vivía como
    una vista del hub de inglés; aquí es una app propia porque sirve a docentes
@@ -37,7 +37,7 @@ const marca = ({ plegado }) => (
   <header className={`flex items-center gap-2 px-3 py-3 ${plegado ? 'md:flex-col md:px-0' : ''}`}>
     <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" className="w-7 h-7 shrink-0" />
     <h1 className={`text-sm font-extrabold leading-tight text-slate-900 ${plegado ? 'md:sr-only' : ''}`}>
-      Teacher's Utility Belt
+      Teacher's Toolbox
     </h1>
     <div className={plegado ? '' : 'ml-auto'}><ThemeToggle /></div>
   </header>

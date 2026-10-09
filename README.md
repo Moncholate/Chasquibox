@@ -1,4 +1,4 @@
-# Teacher's Utility Belt
+# Teacher's Toolbox
 
 La caja de herramientas de clase: para docentes de cualquier asignatura, gratis y sin registrarse.
 
@@ -20,7 +20,7 @@ Nació como "Herramientas de clase" dentro de Grammar HUB y se mudó aquí el 5-
 
 ```
 npm install
-npm run dev      # http://localhost:5174/teachers-utility-belt/
+npm run dev      # http://localhost:5174/teachers-toolbox/
 npm run check    # las comprobaciones de las herramientas
 npm run build
 ```

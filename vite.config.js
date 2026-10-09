@@ -14,7 +14,7 @@ const listarPublic = (dir, base = dir) => readdirSync(dir).flatMap(f => {
 });
 
 const offline = () => ({
-  name: 'utility-belt-offline',
+  name: 'toolbox-offline',
   apply: 'build',
   generateBundle(_, bundle) {
     const hash = createHash('sha256');
@@ -42,7 +42,7 @@ const offline = () => ({
 });
 
 export default defineConfig({
-  base: '/teachers-utility-belt/',  // Para GitHub Pages
+  base: '/teachers-toolbox/',  // Para GitHub Pages
   plugins: [react(), offline()],
   server: {
     port: 5174,

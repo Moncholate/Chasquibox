@@ -187,7 +187,7 @@ export const AUDITOR = () => {
    `revisados`         excepciones decididas: { txt, motivo }. Se comparan por
                        inclusión para no depender de la traducción exacta.
    `ruta`              dónde abre la app, si su `base` de Vite no es la raíz
-                       (Teacher's Utility Belt vive en /teachers-utility-belt/
+                       (Teacher's Toolbox vive en /teachers-toolbox/
                        también en desarrollo, y en la raíz Vite contesta 404).
 
    POR QUÉ `pantallas` y no una sola vista: auditar donde quedó `conducir`

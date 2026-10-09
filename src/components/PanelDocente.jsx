@@ -2,7 +2,7 @@
    HERRAMIENTAS DE CLASE
    ----------------------------------------------------------------------------
    Para quien enseña desde el PC de la sala, a veces proyectado. Nació como una
-   vista de Grammar HUB y se mudó a Teacher's Utility Belt el 5-oct-2026, porque
+   vista de Grammar HUB y se mudó a Teacher's Toolbox (entonces Chasquibox) el 5-oct-2026, porque
    sirve a docentes de cualquier asignatura y no solo de inglés.
 
    LA PANTALLA ES DE PC (6-oct-2026). Heredó de Grammar HUB un diseño de

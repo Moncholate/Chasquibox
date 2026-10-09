@@ -1,5 +1,5 @@
 /* ============================================================================
-   TEACHER'S UTILITY BELT SIN INTERNET
+   TEACHER'S TOOLBOX SIN INTERNET
    ----------------------------------------------------------------------------
    El wifi de una sala falla justo cuando se va a sortear algo. Este service
    worker guarda la app entera en la PRIMERA visita, así que desde la segunda
@@ -20,10 +20,11 @@
        viejo que servir por error.
    ========================================================================== */
 const VERSION = '__VERSION__';
-const CACHE = `utility-belt-${VERSION}`;
-/* La app se llamó Chasquibox hasta el 6-oct-2026 y vivía en /Chasquibox/. Las
+const CACHE = `toolbox-${VERSION}`;
+/* La app se llamó Chasquibox hasta el 6-oct-2026 (/Chasquibox/) y Teacher's
+   Utility Belt hasta el 9-oct-2026 (/teachers-utility-belt/). Las
    copias de entonces quedan en el mismo origen: también se borran. */
-const PREFIJOS = ['utility-belt-', 'chasquibox-'];
+const PREFIJOS = ['toolbox-', 'utility-belt-', 'chasquibox-'];
 const PRECACHE = __PRECACHE__;
 const BASE = new URL(self.registration.scope).pathname;
 const INDEX = `${BASE}index.html`;
