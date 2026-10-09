@@ -16,7 +16,9 @@ import { APAGADO } from '../ui';
 
 const enLinea = () => (typeof navigator === 'undefined' ? true : navigator.onLine !== false);
 
-const BotonCelulares = ({ lang = 'es', actividad, disabled = false }) => {
+/* `nota`: un aviso propio de la herramienta, debajo (la sopa grande que en el
+   celular habrá que deslizar). */
+const BotonCelulares = ({ lang = 'es', actividad, disabled = false, nota = null }) => {
   const es = lang === 'es';
   const [conRed, setConRed] = useState(enLinea);
   useEffect(() => {
@@ -45,6 +47,7 @@ const BotonCelulares = ({ lang = 'es', actividad, disabled = false }) => {
           : (es ? 'Abre Liveboard con esto ya cargado: cada uno responde desde su celular y la pantalla no muestra nombres.'
                 : 'Opens Liveboard with this already loaded: everyone answers on their phone and the screen shows no names.')}
       </p>
+      {nota && conRed && <p className="text-xs text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-2">{nota}</p>}
     </div>
   );
 };

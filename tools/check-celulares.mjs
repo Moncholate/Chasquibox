@@ -33,6 +33,10 @@ const CASOS = [
     { palabra: 'CAT', original: 'cat', pista: 'Un animal', fila: 0, col: 0, dir: 'h', numero: 1 },
     { palabra: 'CAR', original: 'car', fila: 0, col: 0, dir: 'v', numero: 1 },
   ] },
+  { tipo: 'sopa', pregunta: '', lado: 3, destapar: 'mitad', filas: ['CAT', 'XOZ', 'QWG'], palabras: [
+    { palabra: 'CAT', original: 'cat', fila: 0, col: 0, df: 0, dc: 1 },
+    { palabra: 'COG', original: 'cog', fila: 0, col: 0, df: 1, dc: 1 },
+  ] },
 ];
 
 console.log('\nel enlace lleva lo escrito, entero');
@@ -44,7 +48,7 @@ console.log('\nel enlace lleva lo escrito, entero');
     return vuelta.v !== VERSION || JSON.stringify(vuelta.actividad) !== JSON.stringify(a);
   });
   if (rotos.length) fallo(`no vuelven iguales: ${rotos.map(a => a.tipo).join(', ')}`);
-  else ok('los cinco cierres y el crucigrama, con tildes, comillas y ñ, vuelven idénticos');
+  else ok('los cinco cierres, el crucigrama y la sopa, con tildes, comillas y ñ, vuelven idénticos');
 }
 
 console.log('\nsin caracteres que un enlace cambie');
@@ -66,7 +70,7 @@ console.log('\nLiveboard lo entiende');
       return !r?.actividad || r.actividad.tipo !== a.tipo;
     });
     if (rotos.length) fallo(`Liveboard rechaza: ${rotos.map(a => a.tipo).join(', ')}`);
-    else ok('el lector de Liveboard acepta los seis');
+    else ok('el lector de Liveboard acepta los siete');
   }
 }
 

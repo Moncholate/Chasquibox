@@ -77,6 +77,7 @@ import { parsearPalabras, MAX_PALABRAS } from '../palabras';
 import { generar, casillasDe, palabraEntre, NIVELES } from '../sopa';
 import { APAGADO, opcion, ENLACE } from '../ui';
 import { Panel, Escenario, Accion, Cabeza } from '../zonas';
+import BotonCelulares from './BotonCelulares';
 
 /* La cuadrícula es PAPEL, y va fija en los dos temas — como la del crucigrama y
    como la carcasa del semáforo va oscura en los dos. Un pasatiempo es una hoja:
@@ -463,6 +464,20 @@ const Sopa = ({ lang = 'es' }) => {
             <button onClick={() => { setSopa(null); setRespuestas(false); }} className={ENLACE}>
               {es ? 'cambiar las palabras' : 'change the words'}
             </button>
+
+            {/* CON CELULARES va ESTA sopa, la que está en pantalla: cada uno la
+                resuelve en su teléfono y en la pantalla una palabra aparece
+                marcada cuando la encontró la mitad del curso. En el celular las
+                casillas no bajan de 26 px, así que pasada de 13 de lado ya no
+                cabe a lo ancho y hay que deslizarla: se avisa. */}
+            <BotonCelulares lang={lang} actividad={{
+              tipo: 'sopa', pregunta: '', lado: sopa.lado, destapar: 'mitad',
+              filas: sopa.celdas.map(f => f.join('')),
+              palabras: sopa.colocadas.map(({ palabra, original, fila, col, df, dc }) => ({ palabra, original, fila, col, df, dc })),
+            }} nota={sopa.lado > 13
+              ? (es ? `Esta sopa es de ${sopa.lado}×${sopa.lado}: en el celular habrá que deslizarla de lado. Con menos palabras queda más chica.`
+                    : `This grid is ${sopa.lado}×${sopa.lado}: on a phone it will need sideways scrolling. Fewer words make it smaller.`)
+              : null} />
           </div>
         )}
       </Panel>
