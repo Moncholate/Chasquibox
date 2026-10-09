@@ -66,6 +66,7 @@ import React, { useState } from 'react';
 import { parsearPalabras, generar, pistas, MAX_PALABRAS } from '../crucigrama';
 import { APAGADO, ENLACE } from '../ui';
 import { Panel, Escenario, Accion, Cabeza } from '../zonas';
+import BotonCelulares from './BotonCelulares';
 
 /* LA CUADRÍCULA ES PAPEL, y va fija en los dos temas — igual que la carcasa del
    semáforo es un objeto oscuro en los dos. Un crucigrama es una hoja: blanco con
@@ -413,6 +414,16 @@ const Crucigrama = ({ lang = 'es' }) => {
             <button onClick={() => { setCruci(null); taparTodo(); }} className={ENLACE}>
               {es ? 'cambiar las palabras' : 'change the words'}
             </button>
+
+            {/* CON CELULARES va ESTE crucigrama, el que está en pantalla, y no
+                otro armado de nuevo: cada uno lo resuelve en su teléfono y en la
+                pantalla una palabra se destapa cuando la tiene la mitad del
+                curso (así el que sabe mucho no lo llena solo). */}
+            <BotonCelulares lang={lang} actividad={{
+              tipo: 'crucigrama', pregunta: '', ancho: cruci.ancho, alto: cruci.alto, destapar: 'mitad',
+              palabras: cruci.colocadas.map(({ palabra, original, pista, fila, col, dir, numero }) =>
+                ({ palabra, original, ...(pista ? { pista } : {}), fila, col, dir, numero })),
+            }} />
           </div>
         )}
       </Panel>
